@@ -1,25 +1,32 @@
 # ⚡ Rekenrace
 
-Een hoofdrekenspel voor **groep 5**: race met je bliksem (of raceauto, raket, eenhoorn of dino-kart) door de poort met het goede antwoord!
+Een hoofdrekenspel voor **groep 1 t/m 8**: kies je eigen racenaam en avatar en race door de poort met het goede antwoord!
 
-**Speel direct:** https://kmhkasper-boop.github.io/rekenrace/
+**Speel direct:** https://kmhkasper-boop.github.io/rekenrace/ (werkt ook offline als app)
+
+## Het verhaal: De Gestolen Seizoenen
+Graaf Chaos heeft de vier seizoenskristallen gestolen. Samen met Opa Tandwiel en Pim de mol race jij door **Lente, Zomer, Herfst en Winter** om ze terug te halen. Elk seizoen heeft 4 werelden met 8 levels en een eindbaas (Kikkerkoning, Vulkaan-Victor, Uil Komma en Graaf Chaos): **144 levels** in totaal, van tellen tot 5 tot procenten, verhoudingen en contextsommen (groep 8).
 
 ## Hoe speel je?
-- Bovenaan staat een som, bijvoorbeeld **7 × 8**.
-- Er komen drie poorten aan, één per rijbaan. Rijd door de poort met het goede antwoord.
-- 👆 **Veeg** naar links of rechts (of tik op de linker- of rechterkant van het scherm). Op de computer: pijltjes of A/D.
-- 🚀 Weet je het antwoord al? Veeg omhoog (of ↑) voor **turbo**.
-- Fout? Geen probleem: je krijgt een tip en de som komt een paar poorten later terug.
-
-## Werelden
-1. Plus en min tot 20 · 2. Plus en min tot 100 · 3. Tafels 1-5 en 10 · 4. Tafels 6-7-8 (de eindbaas!) · 5. Alle tafels · 6. Mix
+- Bovenaan staat een som. Er komen drie poorten aan: rijd door de poort met het goede antwoord.
+- 👆 Veeg links/rechts (of tik links/rechts). Op de computer: pijltjes of A/D. Veeg omhoog (↑) voor **turbo**.
+- Fout? Je krijgt een tip en de som komt later terug (Leitner-herhaling).
+- 🎟️ **Overslaan-bon**: ongeveer 1 per 3 levels (max. 3). De overgeslagen som komt later in de rit terug.
+- 🔥 **Combo-turbo** na 5 goed op rij.
 
 ## Extra
-- ⭐ **Sterrenkaart**: zie welke sommen al groen (kan ik!), oranje (bijna) of rood (lastig) zijn.
-- ⏱️ **Dagrecord**: hoeveel sommen haal jij in 1 minuut? Met dagrecord, record ooit en een reeks van dagen.
-- 🚗 **Garage**: koop met je munten nieuwe voertuigen en kleuren.
-- 👪 **Voor ouders** (2 seconden vasthouden): alle werelden openen, tafels kiezen om op te focussen, tempo, voortgang wissen.
+- 🧭 **Instaptest** (optioneel, 12 vragen, ±2 min): begint op jouw niveau. Overslaan = start bij Lente level 1. Opnieuw doen kan per profiel.
+- 👻 **Spookrace** tegen je eigen beste rit of tegen een ander profiel op dit apparaat.
+- 👥 Meerdere **profielen** op één apparaat.
+- 🌷 Het menu volgt het **echte seizoen** (bonusmunt in levels van het huidige seizoen).
+- 🚗 **Garage** met 16 voertuigen (4 per seizoen; de eindbazen geven een speciaal voertuig) en kleuren.
+- 🏷️ **Stickerboek**, ⭐ **sterrenkaart**, ⏱️ **dagrecord**.
+- ☕ **Rustmomenten** tussen levels en een **adempauze** na elke 3 levels.
+- 🧘 **Rustige modus** zonder tijdsdruk.
+- 👪 **Voor ouders** (2 sec. vasthouden): sterke en zwakke onderwerpen, een *geschat* niveau (vergelijkbaar met Cito; geen officiële toets), tempo, rustige modus, focus op tafels, instaptest opnieuw, profiel wissen.
 
-Lastige sommen komen vaker terug (als gouden poort, dubbele munten); sommen die goed én snel gaan, komen minder vaak. Alles wordt alleen in de browser bewaard (localStorage).
-
-Eén HTML-bestand, geen installatie nodig.
+## Techniek
+- Broncode in `src/` (`engine/`, `data/`, `art/`, `ui/`). `node tools/build.js` maakt er één `index.html` plus `sw.js` van.
+- Afbeeldingen in `assets/*.webp` worden automatisch opgenomen en offline gecachet. Zonder afbeelding tekent het spel alles zelf (canvas).
+- Geen externe verzoeken: het lettertype staat in `fonts/`. Voortgang staat alleen in de browser (localStorage `rekenrace_v2`; v1-voortgang wordt automatisch overgenomen).
+- Tests: `tests/v2.test.js` (Playwright): generatoren, instaptest, voortgang, bonnen, profielen, migratie en lay-outs.

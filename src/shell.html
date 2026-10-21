@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<meta name="theme-color" content="#4cc3ff">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="description" content="Rekenrace: race door de goede poort! Hoofdrekenen voor groep 1 t/m 8 in vier seizoenen, 144 levels, helemaal offline.">
+<title>Rekenrace – hoofdrekenen met vaart!</title>
+<link rel="icon" type="image/png" sizes="48x48" href="icons/favicon-48.png">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<link rel="preload" href="fonts/fredoka-latin.woff2" as="font" type="font/woff2" crossorigin>
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Rekenrace">
+<style>
+/*@CSS*/
+</style>
+<script>
+/*@PWA*/
+</script>
+</head>
+<body>
+<div id="game" aria-label="Racebaan">
+  <canvas id="cv"></canvas>
+  <div id="hud">
+    <div id="hudTop">
+      <button id="btnPause" class="iconbtn" aria-label="Pauze">⏸️</button>
+      <div id="sumCard">
+        <div id="sumGold">⭐ Gouden som: dubbele munten! ⭐</div>
+        <canvas id="sumVis"></canvas>
+        <div id="sumText">&nbsp;</div>
+        <div id="hudBar"><div id="progTrack"><div id="progFill"></div></div><span id="progText">0/20</span></div>
+        <div id="bossRow"><span>👹 <span id="bossName">Eindbaas</span></span><div id="bossTrack"><div id="bossFill"></div></div></div>
+      </div>
+      <div id="hudRight">
+        <div class="pill" id="pillScore"><span>🏆</span><b id="hudScore">0</b></div>
+        <div class="pill"><span>🪙</span><b id="hudCoins">0</b></div>
+        <div class="pill" id="pillStreak"><span>🔥</span><b id="hudStreak">0</b></div>
+        <div class="pill" id="pillGhost">👻</div>
+      </div>
+    </div>
+    <div id="toast"></div>
+    <div id="fb"></div>
+    <div id="tipCard" aria-live="polite"><div id="tipHead">Bijna!</div><div id="tipSum"></div><div id="tipText"></div></div>
+    <div id="countBig"></div>
+    <div id="swipeHint">👆 Veeg ← → om te sturen · ↑ turbo</div>
+    <button id="btnVoucher" aria-label="Sla deze som over">🎟️ Overslaan <b id="vCount">0</b></button>
+    <button id="calmGo" class="btn green">🚀 Klaar? Rijden!</button>
+  </div>
+</div>
+
+<!-- PROFIELEN -->
+<div id="scrProfiles" class="overlay sky">
+  <div class="topright"><button class="iconbtn mutebtn" aria-label="Geluid aan/uit">🔊</button></div>
+  <div class="wrap">
+    <h1 class="logo"><span class="bolt">⚡</span>Reken<span class="r2">race</span></h1>
+    <p class="tagline">Wie gaat er racen?</p>
+    <div class="plist" id="profList"></div>
+  </div>
+</div>
+<div id="scrNew" class="overlay sky">
+  <div class="wrap">
+    <div class="topbar"><button class="iconbtn" data-go="scrProfiles" aria-label="Terug">⬅️</button><div class="title">🏎️ Nieuwe racer</div></div>
+    <div class="card modalcard">
+      <div id="newPreview"></div>
+      <label for="newName"><b>Hoe heet je?</b></label>
+      <input id="newName" maxlength="14" autocomplete="off" placeholder="Jouw racenaam">
+      <b>Kies je avatar</b><div class="pickgrid" id="avPick"></div>
+      <b>Kies je kleur</b><div class="pickgrid" id="colPick"></div>
+      <label class="check"><input type="checkbox" id="newCalm"> 🧘 Rustige modus (geen tijdsdruk)</label>
+      <button class="btn big green" id="btnNewGo">✅ Klaar!</button>
+    </div>
+  </div>
+</div>
+
+<!-- MENU -->
+<div id="scrMenu" class="overlay sky">
+  <div class="clouds" aria-hidden="true">
+    <div class="cloud" style="width:140px;height:44px;top:8%;animation-duration:70s;animation-delay:-20s"></div>
+    <div class="cloud" style="width:200px;height:60px;top:34%;animation-duration:95s;animation-delay:-60s"></div>
+    <div class="cloud" style="width:110px;height:36px;top:66%;animation-duration:80s;animation-delay:-5s"></div>
+  </div>
+  <div class="topleft"><button class="profpill" id="btnSwitch" aria-label="Wissel van racer"><span id="menuProf"></span></button></div>
+  <div class="topright"><span class="pill" aria-label="Bonnen">🎟️ <b id="menuV">0</b></span><span class="pill" aria-label="Munten">🪙 <b class="coinTxt">0</b></span><button class="iconbtn mutebtn" aria-label="Geluid aan/uit">🔊</button></div>
+  <div class="wrap">
+    <h1 class="logo"><span class="bolt">⚡</span>Reken<span class="r2">race</span></h1>
+    <div class="seasonbanner" id="menuSeason"></div>
+    <div class="streakbadge" id="menuStreak">🔥</div>
+    <canvas id="menuCar" width="480" height="300" aria-hidden="true"></canvas>
+    <div class="menugrid">
+      <button class="btn big green span2" id="btnPlay">🏁 Rijden!</button>
+      <button class="btn big purple" id="btnMap">🗺️ Kaart</button>
+      <button class="btn big orange" id="btnDag">⏱️ Dagrecord</button>
+      <button class="btn" id="btnGarage">🚗 Garage</button>
+      <button class="btn" id="btnStickers">🏷️ Stickers</button>
+      <button class="btn" id="btnKaart">⭐ Sterren&shy;kaart</button>
+      <button class="btn" id="btnStory">📖 Verhaal</button>
+    </div>
+    <button id="btnParent" class="btn small parent-gate" aria-label="Voor ouders: houd 2 seconden ingedrukt"><span class="fill"></span><span>👪 Voor ouders <small>(houd 2 sec. vast)</small></span></button>
+  </div>
+</div>
+
+<!-- KAART -->
+<div id="scrMap" class="overlay sky">
+  <div class="wrap">
+    <div class="topbar"><button class="iconbtn" data-go="scrMenu" aria-label="Terug">⬅️</button><div class="title">🗺️ De Gestolen Seizoenen</div><span class="pill">⭐ <b id="mapStars">0</b></span><span class="pill">🎟️ <b id="mapV">0</b></span></div>
+    <div class="stabs" id="seasonTabs"></div>
+    <div id="mapBox"></div>
+  </div>
+</div>
+<div id="mdLevel" class="overlay dim">
+  <div class="card mdcard">
+    <h2 id="lvTitle" style="margin:0;font-size:1.25em"></h2>
+    <div class="chips" id="lvSkills"></div>
+    <div class="small-note" id="lvInfo"></div>
+    <b>👻 Spookrace</b>
+    <div class="ghostsel" id="lvGhost"></div>
+    <div class="btnrow"><button class="btn big green" id="btnLvGo">🏁 Start</button><button class="btn white" id="btnLvClose">Terug</button></div>
+  </div>
+</div>
+
+<!-- GARAGE -->
+<div id="scrGarage" class="overlay sky">
+  <div class="wrap">
+    <div class="topbar"><button class="iconbtn" data-go="scrMenu" aria-label="Terug">⬅️</button><div class="title">🚗 Garage</div><span class="pill">🪙 <b class="coinTxt">0</b></span></div>
+    <div id="vehList" style="width:100%"></div>
+    <h2 class="sect">🎨 Kleuren</h2>
+    <div class="cgrid" id="colList"></div>
+    <p class="small-note">Munten verdien je met goede antwoorden. In het seizoen van nu krijg je een bonusmunt! Eindbazen geven een speciaal voertuig.</p>
+  </div>
+</div>
+
+<!-- STICKERS -->
+<div id="scrStickers" class="overlay sky">
+  <div class="wrap">
+    <div class="topbar"><button class="iconbtn" data-go="scrMenu" aria-label="Terug">⬅️</button><div class="title">🏷️ Stickerboek</div><span class="pill" id="stkCount"></span></div>
+    <div class="stkgrid" id="stkGrid"></div>
+  </div>
+</div>
+
+<!-- STERRENKAART -->
+<div id="scrKaart" class="overlay sky">
+  <div class="wrap">
+    <div class="topbar"><button class="iconbtn" data-go="scrMenu" aria-label="Terug">⬅️</button><div class="title">⭐ Sterrenkaart</div></div>
+    <div class="card kcard">
+      <h2>✖️ De tafels <span id="tGreen" class="small-note"></span></h2>
+      <div class="tgrid" id="tGrid"></div>
+      <div id="cellInfo">Tik op een vakje!</div>
+      <div class="legend"><span><i class="m0"></i>nog niet geoefend</span><span><i class="m1"></i>lastig</span><span><i class="m2"></i>bijna</span><span><i class="m3"></i>kan ik!</span></div>
+    </div>
+    <div class="card kcard"><h2>📚 Onderwerpen</h2><div class="bars" id="pmBars"></div></div>
+  </div>
+</div>
+
+<!-- EINDE LEVEL -->
+<div id="scrEnd" class="overlay sky">
+  <div class="wrap">
+    <h1 class="win-title" id="endTitle">Finish! 🏁</h1>
+    <div class="card modalcard">
+      <div id="endWorld" style="font-weight:700"></div>
+      <div class="bigstars" id="endStars"></div>
+      <div id="endMsg" style="font-weight:600"></div>
+      <div class="statrow" id="endStats"></div>
+      <div id="endBanners" style="display:grid;gap:8px"></div>
+      <div class="chips" id="endChips"></div>
+      <div class="small-note">Groen = meteen goed · Oranje = verbeterd · Rood = nog oefenen</div>
+      <div class="btnrow">
+        <button class="btn big green" id="btnNext">➡️ Volgende level</button>
+        <button class="btn" id="btnAgain">🔁 Nog een keer</button>
+        <button class="btn purple" data-go="scrMap">🗺️ Kaart</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- DAGRECORD -->
+<div id="scrDag" class="overlay sky">
+  <div class="wrap">
+    <div class="topbar"><button class="iconbtn" data-go="scrMenu" aria-label="Terug">⬅️</button><div class="title">⏱️ Dagrecord</div></div>
+    <div class="card modalcard">
+      <h2>Hoeveel sommen haal jij in 1 minuut? 🏎️💨</h2>
+      <p style="margin:0">Sommen door elkaar, precies op jouw niveau. Elke 5 op rij = <b>+2 bonus!</b><br>Weet je het antwoord al? <b>Veeg omhoog voor turbo! 🚀</b></p>
+      <div class="recs"><div class="rec">Record vandaag<b id="dagToday">–</b></div><div class="rec">Record ooit<b id="dagAll">–</b></div></div>
+      <div id="dagStreak" class="banner"></div>
+      <div class="week" id="dagWeek"></div>
+      <button class="btn big orange" id="btnDagStart">⏱️ Start de minuut!</button>
+    </div>
+  </div>
+</div>
+<div id="scrDagEnd" class="overlay sky">
+  <div class="wrap">
+    <h1 class="win-title" id="dagEndTitle" style="-webkit-text-stroke-color:var(--orange);text-shadow:0 5px 0 var(--orange)">Tijd! ⏱️</h1>
+    <div class="card modalcard">
+      <div>Jouw score</div>
+      <div class="bigscore" id="dagScore">0</div>
+      <div class="statrow" id="dagStats"></div>
+      <div id="dagBanners" style="display:grid;gap:8px"></div>
+      <div class="recs"><div class="rec">Record vandaag<b id="dagToday2">–</b></div><div class="rec">Record ooit<b id="dagAll2">–</b></div></div>
+      <div id="dagStreak2" class="banner"></div>
+      <div class="week" id="dagWeek2"></div>
+      <div class="btnrow"><button class="btn orange" id="btnDagAgain">🔁 Nog een minuut</button><button class="btn purple" data-go="scrMenu">🏠 Menu</button></div>
+    </div>
+  </div>
+</div>
+
+<!-- INSTAPTEST -->
+<div id="scrPlace" class="overlay sky">
+  <div class="wrap">
+    <div class="topbar"><div class="title">🧭 Instaptest</div></div>
+    <div class="card plcard" id="plIntro">
+      <h2 style="margin:0">Hoi <span id="plName"></span>! 👋</h2>
+      <p style="margin:0">Opa Tandwiel wil weten waar jij het beste kunt beginnen. Je krijgt <b>12 sommen</b> (ongeveer 2 minuten). Tik op het goede antwoord. Weet je het niet? Gok maar, dat is helemaal oké!</p>
+      <div class="btnrow"><button class="btn big green" id="btnPlStart">🧭 Start de test</button><button class="btn white" id="btnPlSkip">Overslaan – begin bij Lente level 1</button></div>
+    </div>
+    <div class="card plcard" id="plRun" style="display:none">
+      <div class="small-note" id="plCount"></div>
+      <div class="ptrack"><div id="plProg"></div></div>
+      <canvas id="plVis"></canvas>
+      <div id="plQ"></div>
+      <div class="plopts" id="plOpts"></div>
+      <div class="ptrack" aria-hidden="true"><div id="plTime"></div></div>
+    </div>
+    <div class="card plcard" id="plDone" style="display:none">
+      <h2 style="margin:0">Klaar! 🎉</h2>
+      <div id="plResult" style="font-size:1.3em"></div>
+      <p class="small-note" style="margin:0">De levels daarvoor staan alvast open. Je kunt ze altijd nog spelen voor sterren.</p>
+      <button class="btn big green" id="btnPlDone">🏁 Op naar de race!</button>
+    </div>
+  </div>
+</div>
+
+<!-- RUSTMOMENT -->
+<div id="scrRest" class="overlay">
+  <canvas id="restCv" class="fullcv"></canvas>
+  <div id="restTitle"></div>
+  <div class="restui"><div class="card" id="restText"></div><div id="restBarT"><div id="restBar"></div></div><button class="btn small white" id="btnRestSkip">Verder ▶</button></div>
+</div>
+
+<!-- VERHAAL -->
+<div id="scrStory" class="overlay">
+  <canvas id="storyCv" class="fullcv"></canvas>
+  <div id="storyTitle"></div>
+  <button id="btnStorySkip">Overslaan ⏭</button>
+  <div class="storyui">
+    <div id="bubble" class="bubble narr"><div id="bubbleWho"></div><div id="bubbleText"></div></div>
+    <div class="dots" id="storyDots"></div>
+    <button class="btn green" id="btnStoryNext">Verder ▶</button>
+  </div>
+</div>
+
+<!-- PAUZE -->
+<div id="mdPause" class="overlay dim">
+  <div class="card modalcard" style="max-width:420px">
+    <h2>⏸️ Pauze</h2>
+    <button class="btn big green" id="btnResume">▶️ Verder rijden</button>
+    <button class="btn white" id="btnCalm">🧘 Rustige modus</button>
+    <button class="btn white mutebtn2" id="btnMute2">🔊 Geluid aan</button>
+    <button class="btn orange" id="btnQuit">🏠 Stoppen</button>
+  </div>
+</div>
+
+<!-- OUDERS -->
+<div id="mdOuders" class="overlay dim">
+  <div class="card ocard">
+    <h2>👪 Voor ouders</h2>
+    <div style="text-align:center;font-weight:700" id="oudName"></div>
+    <div><h3>📈 Niveau</h3><div class="oest" id="oudEst"></div></div>
+    <div><h3>🔎 Onderwerpen</h3><div class="otopics" id="oudTopics"></div></div>
+    <div><h3>🧩 Lastige sommen</h3><div class="chips" style="justify-content:flex-start" id="oudHard"></div></div>
+    <div><h3>📊 Overzicht</h3><p id="ouderStats"></p></div>
+    <div><h3>🧘 Rustige modus</h3><p>Geen tijdsdruk: de poort wacht tot je kiest en op ‘Rijden’ tikt.</p>
+      <div class="seg" id="segCalm" style="margin-top:6px"><button data-v="0">Uit</button><button data-v="1">Aan</button></div></div>
+    <div><h3>🏎️ Tempo</h3><p>Het spel past de snelheid zelf aan. Hiermee zet je alles iets rustiger of pittiger.</p>
+      <div class="seg" id="segPace" style="margin-top:6px"><button data-v="rustig">🐢 Rustig</button><button data-v="normaal">🙂 Normaal</button><button data-v="pittig">🐆 Pittig</button></div></div>
+    <div><h3>🗺️ Levels</h3><p>Normaal gaan levels één voor één open. Hier kun je alles meteen openzetten.</p>
+      <div class="seg" id="segUnlock" style="margin-top:6px"><button data-v="0">Stap voor stap</button><button data-v="1">Alles open</button></div></div>
+    <div><h3>🎯 Focus op tafels</h3><p>Gekozen tafels komen vaker voor. Niets gekozen = normaal.</p>
+      <div class="tablechips" id="focusChips" style="margin-top:6px"></div></div>
+    <div><h3>🧭 Instaptest</h3><p>Opnieuw doen kan altijd; behaalde voortgang blijft staan.</p><button class="btn small" id="btnRedoPlace" style="margin-top:6px">Instaptest opnieuw doen</button></div>
+    <div><h3>🧽 Profiel</h3><div class="btnrow" style="justify-content:flex-start;margin-top:6px"><button class="btn small orange" id="btnReset">Voortgang wissen</button><button class="btn small red" id="btnDelProf">Profiel verwijderen</button></div></div>
+    <button class="btn green" id="btnOudersClose">✅ Klaar</button>
+  </div>
+</div>
+<script>
+/*@JS*/
+</script>
+</body>
+</html>
