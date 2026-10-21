@@ -59,7 +59,7 @@ function renderMap() {
   let h = '';
   for (let wi = 0; wi < 4; wi++) {
     const w = WORLDS[mapSeason * 4 + wi], wo = worldOpen(w.id);
-    h += `<section class="wsec ${wo ? '' : 'locked'}"><div class="whead"><span class="wi">${wo ? w.icon : '🔒'}</span><span><b>${w.name}</b><br><small>${w.groep} · ⭐ ${worldStars(w.id)}/27</small></span></div><div class="path">`;
+    h += `<section class="wsec ${wo ? '' : 'locked'}"><div class="whead"><span class="wi">${wo ? aimg('icon_w' + w.id, w.icon, 'wico') : '🔒'}</span><span><b>${w.name}</b><br><small>${w.groep} · ${aimg('ui_ster', '⭐')} ${worldStars(w.id)}/27</small></span></div><div class="path">`;
     for (let l = 0; l < LPW; l++) {
       const lv = levelOf(w.id, l), op = isOpen(lv.id), rec = P.lv[lv.id] || {}, st = rec.pl ? 0 : rec.st || 0, nx = lv.id === nextLevel();
       h += `<button class="node ${op ? '' : 'locked'} ${lv.boss ? 'boss' : ''} ${rec.cl ? 'done' : ''} ${rec.pl ? 'placed' : ''} ${nx ? 'next' : ''}" data-level="${lv.id}" aria-label="${w.name} ${lv.name}" style="--i:${l}">
@@ -222,3 +222,14 @@ function applyYoung() {
     if (y) { if (b.dataset.yi !== '1') { b.dataset.orig = b.innerHTML; b.dataset.yi = '1'; if (!b.getAttribute('aria-label')) b.setAttribute('aria-label', b.textContent.trim()); } b.innerHTML = `<span class="yico">${YOUNG_ICONS[id]}</span>`; }
     else if (b.dataset.yi === '1') { b.innerHTML = b.dataset.orig; b.dataset.yi = ''; } }
 }
+
+/* Grogs UI-art in de HTML: <img> als het bestand er is, anders de emoji */
+function aimg(n, fb, cls) { return ART.has(n) ? `<img class="aimg ${cls || ''}" src="assets/${n}.webp" alt="${fb}" draggable="false">` : fb; }
+function artDom() {
+  const sw = (sel, n, fb) => document.querySelectorAll(sel).forEach(e => { if (ART.has(n)) e.innerHTML = aimg(n, fb); });
+  sw('#hud .pill > span:first-child', 'ui_munt', '🪙');
+  const v = $('#btnVoucher'); if (v && ART.has('ui_skip_voucher')) v.innerHTML = aimg('ui_skip_voucher', '🎟️', 'vimg') + ' Overslaan <b id="vCount">' + (($('#vCount') || {}).textContent || 0) + '</b>';
+  document.querySelectorAll('h1.logo .bolt').forEach(e => { if (ART.has('ui_logo_embleem')) e.outerHTML = aimg('ui_logo_embleem', '⚡', 'emb'); });
+  if (ART.has('ui_garage')) document.documentElement.classList.add('art-garage');
+}
+artDom();

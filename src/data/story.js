@@ -20,8 +20,8 @@ const STORY = {
   w8: { s: 2, title: 'Duizend-dennen', p: [['pim', 'opa', 'l', 'Er staan hier wel duizend dennen. Ik heb er 999 geteld. En toen ben ik tegen nummer 1000 gelopen.'], ['opa', 'player', 'r', 'Handig rekenen: 999 is bijna 1000!']] },
   w9: { s: 2, title: 'Meetmoeras', p: [['chaos', 'pim', 'l', 'Ik heb alle meetlinten door de war gegooid! Zijn het meters? Centimeters? Spaghetti?'], ['opa', 'pim', 'r', '1 meter is 100 centimeter. Dat weet zelfs mijn snor.']] },
   w10: { s: 2, title: 'Nullen-heuvel', p: [['pim', 'opa', 'l', 'Overal rollen nullen de heuvel af! 30 × 40… hoeveel nullen moeten erachter?'], ['opa', 'player', 'r', 'Eerst 3 × 4, dan de nullen terug. Makkie!']] },
-  w11: { s: 2, title: 'Breukenbos', p: [['uil', 'pim', 'l', 'Oehoe… ik ben Uil Komma. Chaos zei dat ik de taarten moest verdelen, maar ik raak in de war.'], ['player', 'uil', 'l', 'Geen zorgen, Uil. Ik help je de breuken eerlijk te verdelen!']] },
-  b2: { s: 2, title: 'Het Herfstkristal', p: [['uil', 'player', 'l', 'Oehoe, dank je! Nu snap ik het. Hier is het Herfstkristal. Ik ben nu jullie vriend!'], ['pim', 'opa', 'l', 'Brrr… het wordt koud. Ik ruik sneeuw. Of is het Opa\'s sok?']] },
+  w11: { s: 2, title: 'Breukenbos', p: [['egel', 'pim', 'l', 'En garde! Ik ben de Egel-ridder. Geen doorgang zonder de juiste breuk!'], ['player', 'egel', 'l', 'Een half bos vol prikkels? Ik verdeel de breuken eerlijk!']] },
+  b2: { s: 2, title: 'Het Herfstkristal', p: [['egel', 'player', 'l', 'Oei, ik zie alles in vieren… Je verdient het Herfstkristal!'], ['pim', 'opa', 'l', 'Brrr… het wordt koud. Ik ruik sneeuw. Of is het Opa\'s sok?']] },
   w12: { s: 3, title: 'Komma-kristal', p: [['chaos', 'pim', 'l', 'Ik heb overal komma\'s gestrooid! 2,5 of 25? Niemand weet het meer!'], ['opa', 'player', 'r', 'Een komma op de goede plek is goud waard. Op naar het ijs!']] },
   w13: { s: 3, title: 'Procentenpiek', p: [['pim', 'opa', 'l', 'De berg is voor 50% beklommen. Of 75%? Ik ben vooral 100% moe.'], ['opa', 'pim', 'r', '50% is de helft, Pim. Nog even doorzetten!']] },
   w14: { s: 3, title: 'Verhoudings-gletsjer', p: [['chaos', 'opa', 'l', 'Op mijn kaart is de finish maar 3 centimeter ver! Haha, jullie verdwalen toch.'], ['opa', 'player', 'r', 'Schaal 1 : 100.000… dan is dat 3 kilometer. Kom op!']] },
@@ -31,7 +31,15 @@ const STORY = {
     ['player', 'chaos', 'l', 'Dan rekenen we vanaf nu samen! Race je mee?'],
     ['opa', 'pim', 'n', 'Alle vier de seizoenen zijn weer in orde. En Graaf Chaos? Die heet nu gewoon Graaf Gezellig. 🎉'] ] },
 };
-const CHAR_NAMES = { opa: 'Opa Tandwiel', pim: 'Pim de mol', chaos: 'Graaf Chaos', kikker: 'Kikkerkoning', victor: 'Vulkaan-Victor', uil: 'Uil Komma', player: '' };
+const CHAR_NAMES = { opa: 'Opa Tandwiel', pim: 'Pim de mol', chaos: 'Graaf Chaos', kikker: 'Kikkerkoning', victor: 'Vulkaan-Victor', uil: 'Uil Komma', egel: 'Egel-ridder', player: '' };
+/* Grogs verhaalstrips (deel 7): welke strips bij welk verhaal horen; elke strip = 3 panelen = 3 stappen */
+const STRIP_FOR = { intro: [1], w0: [2], w3: [3], b0: [4], w4: [5], w7: [6], b1: [7], w8: [8], w11: [9], b2: [10], w12: [11, 12], w14: [13], w15: [14], b3: [15, 16] };
+const STRIP_PICS = {
+  1: ['💎💎💎💎 ❓', '🦹 😂', '🏎️💨 🦹'], 2: ['🌷🙃', '🦹 🙈 1 2 3', '☝️ 1 2 3 🙂'], 3: ['🐸 ✋ 🛑', '🐸 2️⃣ ✖️', '🏎️ 👍 2️⃣'], 4: ['🐸 💎', '💎 1/4 ✅', '🦹 😠 ☀️'],
+  5: ['🍦 💶💶💶', '🍦 💧', '🏎️ 🧮 ✅'], 6: ['🌋 😠', '🌋 🔥 ✖️', '🏎️ 6️⃣7️⃣ 👍'], 7: ['🌋 😎', '💎 ☀️', '🔧 🔥 🎉'], 8: ['🦹 💨🍂', '🥧 💨 😱', '🏎️ 🥧 ✋'],
+  9: ['🦔 🛑 ½', '🦔 ⚔️', '🐹 👍'], 10: ['🦔 😵 ¼', '🦔 💎 🍂', '🏎️ ❄️ ➡️'], 11: ['🐹 🥶', '🔧 ⛓️ 🏎️', '🏎️ 🌌'], 12: ['🦉 ❓ ,', '🦉 😵‍💫', '🏎️ 🤝 🦉'],
+  13: ['🦉 💡', '🦉 💎 ❄️', '🦉 🤝 🏎️'], 14: ['🦹 🏁 😈', '🦹 🌀', '🏎️ 🧮 ✅'], 15: ['🦹 😢', '🦹 🧩', '🏎️ 🤝 🦹'], 16: ['🌷☀️🍂❄️ 🎉', '🦹 🏎️ ❓', '🎉 🎉 🎉'],
+};
 /* plaatjesversie voor groep 1-2 (geen lezen nodig) */
 const STORY_PICS = {
   intro: ['👋 🔧 🏎️', '👋 🐹 👓', '🦹 💎💎💎💎 ➡️ 👜', '🌷☀️🍂❄️ ❓ ➡️ 🏎️💨', '🏎️💨 🏁 👍'],

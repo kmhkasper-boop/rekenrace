@@ -33,3 +33,12 @@ Graaf Chaos heeft de vier seizoenskristallen gestolen. Samen met Opa Tandwiel en
 - Afbeeldingen in `assets/*.webp` worden automatisch opgenomen en offline gecachet. Zonder afbeelding tekent het spel alles zelf (canvas).
 - Geen externe verzoeken: het lettertype staat in `fonts/`. Voortgang staat alleen in de browser (localStorage `rekenrace_v2`; v1-voortgang wordt automatisch overgenomen).
 - Tests: `tests/v2.test.js` (Playwright): generatoren, instaptest, voortgang, bonnen, profielen, migratie en lay-outs.
+
+## Art (Grog, deel 1-7)
+`python3 tools/art.py` zet `/workspace/rekenrace_assets` om naar `assets/*.webp` (136 bestanden, ±5,7 MB, zelfde domein, door de service worker gecachet) en schrijft `src/data/strips.js` uit `bubbles.json`. Elke tekenfunctie valt terug op de procedurele tekening als een afbeelding ontbreekt.
+- Achtergrond: far (landschap/portret), mid-laag met parallax, near-sprites in de berm. Wegtexturen worden (nog) niet gebruikt.
+- Voertuigen: grijze sprites, ingekleurd met multiply + alfamasker (cache per kleur); herfst_3 (eenhoorn) eerst ontkleurd.
+- Personages: char_<id>_<0 blij|1 verrast|2 boos>; speler a/b/c volgt de avatar; speler_b bijgesneden tot buste. Herfstbaas is nu de Egel-ridder (Uil Komma verschijnt in de winter), zoals in de strips.
+- Verhaal: 16 strips (STRIP_FOR in data/story.js), paneel voor paneel, tekst in de ballon, met naam van de speler; groep 1-2 ziet pictogrammen in de ballon. Lege vlakken (strip 01/04/13) worden weggeknipt. Verhalen zonder strip gebruiken de oude scène.
+- Rustmomenten: 8 animaties (4 frames, 6 fps).
+- UI: poortbogen (normaal/goed/fout), munt, ster, bon, kristallen, embleem, wereldiconen, garage-achtergrond. De knop-sprites worden niet gebruikt (CSS-knoppen blijven).

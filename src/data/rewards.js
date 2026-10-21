@@ -51,11 +51,15 @@ const STICKERS = [
   ['dag20', '⚡', 'Bliksemsnel', '20 punten in een Dagrecord', P => P.allTime >= 20],
   ['lente', '🌷', 'Lentekristal', 'Versla de Kikkerkoning', P => P.seasonsDone.includes(0)],
   ['zomer', '☀️', 'Zomerkristal', 'Versla Vulkaan-Victor', P => P.seasonsDone.includes(1)],
-  ['herfst', '🍂', 'Herfstkristal', 'Help Uil Komma', P => P.seasonsDone.includes(2)],
+  ['herfst', '🍂', 'Herfstkristal', 'Versla de Egel-ridder', P => P.seasonsDone.includes(2)],
   ['winter', '❄️', 'Winterkristal', 'Versla Graaf Chaos', P => P.seasonsDone.includes(3)],
 ];
 /* rustmomenten tussen levels (5-8 s) */
 const RESTS = ['pitstop', 'wasstraat', 'ijsje', 'eekhoorn', 'sneeuwpop', 'tanken', 'vlieger', 'picknick'];
 const REST_TXT = { pitstop: 'Pitstop! Opa Tandwiel wisselt je banden.', wasstraat: 'Even door de wasstraat… blub blub!', ijsje: 'Pim haalt een ijsje… oeps!', eekhoorn: 'Een eekhoorn verstopt nootjes langs de baan.',
   sneeuwpop: 'Pim bouwt een sneeuwpop. Hij lijkt op Opa!', tanken: 'Tanken met rekenkracht: vol = 100%!', vlieger: 'Opa laat een vlieger op. Het waait hard!', picknick: 'Picknick! Wie heeft de laatste boterham?' };
+/* Grogs rustmoment-animaties (deel 6): sheet met 4 frames, ~6 fps */
+const REST_ANIM = { r01: 'Opa Tandwiel draait de laatste bout vast.', r02: 'Pim graaft een tunneltje… waar komt hij boven?', r03: 'De Kikkerkoning springt een rondje!', r04: 'Pim likt aan een ijsje. Mmm!',
+  r05: 'Vulkaan-Victor zet zijn zonnebril op. Cool!', r06: 'De Egel-ridder vangt een vallend blad.', r07: 'Opa geeft je motor een druppeltje olie.', r08: 'Uil Komma knoopt zijn sjaal om.' };
+const REST_ANIM_BY_SEASON = [['r01', 'r02', 'r03'], ['r04', 'r05', 'r07'], ['r06', 'r01', 'r02', 'r07'], ['r08', 'r07', 'r01']];
 const REST_BY_SEASON = [['pitstop', 'wasstraat', 'vlieger', 'picknick'], ['ijsje', 'wasstraat', 'pitstop', 'tanken'], ['eekhoorn', 'vlieger', 'pitstop', 'tanken'], ['sneeuwpop', 'pitstop', 'tanken', 'wasstraat']];

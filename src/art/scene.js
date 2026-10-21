@@ -55,7 +55,13 @@ function drawSky() {
   if (key !== skyKey) { skyGrad = ctx.createLinearGradient(0, 0, 0, HOR); skyGrad.addColorStop(0, th.sky[0]); skyGrad.addColorStop(1, th.sky[1]); skyKey = key; }
   ctx.fillStyle = skyGrad; ctx.fillRect(0, 0, W, HOR + 2);
   const key2 = SEASONS[themeS].key, bg = ART.img(`bg_${key2}_w${themeW}`) || ART.img('bg_' + key2);
-  if (bg) { drawImgCover(ctx, bg, -W * .05, 0, W * 1.1, HOR + 3, -camX * 12); if (R && R.lv && R.lv.boss) drawBoss(W * .66 - camX * 10, HOR + 2, m * .11); return; }
+  const bgP = H > W * 1.15 && ART.img('bg_' + key2 + '_p');
+  if (bg || bgP) {
+    drawImgCover(ctx, bgP || bg, -W * .05, 0, W * 1.1, HOR + 3, -camX * 12);
+    const mid = ART.img('bg_' + key2 + '_mid');
+    if (mid) { const r = mid.height / mid.width; let w = Math.max(W * .9, 520), h = w * r; if (h > HOR * .42) { h = HOR * .42; w = h / r; }
+      let x0 = ((-camX * 30) % w + w) % w - w; for (let x = x0; x < W; x += w - 1) ctx.drawImage(mid, x, HOR + 3 - h, w, h); }
+    if (R && R.lv && R.lv.boss) drawBoss(W * .66 - camX * 10, HOR + 2, m * .11); return; }
   if (th.aurora) { for (let i = 0; i < 3; i++) { const g = ctx.createLinearGradient(0, HOR * .1, 0, HOR * .7); const cA = ['rgba(95,255,138,', 'rgba(127,231,255,', 'rgba(185,138,255,'][i]; g.addColorStop(0, cA + '0)'); g.addColorStop(.5, cA + '.45)'); g.addColorStop(1, cA + '0)');
     ctx.fillStyle = g; ctx.beginPath(); ctx.moveTo(0, HOR * .6); for (let x = 0; x <= W + 20; x += 20) ctx.lineTo(x, HOR * (.25 + .12 * Math.sin(x * .01 + TG * .6 + i * 2)) + i * 12); ctx.lineTo(W, HOR * .7); ctx.lineTo(0, HOR * .7); ctx.fill(); } }
   if (th.moon || th.aurora) { ctx.fillStyle = '#fff'; for (let i = 0; i < 30; i++) { const x = (i * 97.3) % W, y = (i * 53.7) % (HOR * .8); ctx.globalAlpha = .4 + .4 * Math.sin(TG * 2 + i); circ(ctx, x, y, 1.3); } ctx.globalAlpha = 1; }
@@ -91,7 +97,7 @@ function drawBoss(x, y, s) {
   const id = R.lv.w % 4 === 3 ? SEASONS[R.lv.s].boss : 'chaos';
   const wob = Math.sin(TG * 3) * s * .05 + (hit ? Math.sin(TG * 60) * s * .08 : 0);
   ctx.save(); if (hit) ctx.globalAlpha = .7 + .3 * Math.sin(TG * 40);
-  drawChar(ctx, id, x + wob, y, s * 1.6 * (.7 + .3 * hp), hit ? 2 : 0, TG);
+  drawChar(ctx, id, x + wob, y, s * 1.6 * (.7 + .3 * hp), hit ? 1 : 2, TG);
   ctx.restore();
 }
 function drawGround() {
@@ -115,7 +121,7 @@ function drawDecor(d, z) {
   const s = sc(z) * d.size; if (s < 2) return;
   const x = CX + (d.X - camX) * sc(z), y = gy(z), c = ctx;
   c.fillStyle = 'rgba(0,0,0,.12)'; ell(c, x, y, s * .35, s * .08);
-  const im = ART.img('decor_' + d.type); if (im) { drawImgBottom(c, im, x, y, s * .9); return; }
+  const im = (d.near && ART.img(d.near)) || ART.img('decor_' + d.type); if (im) { drawImgBottom(c, im, x, y, s * .9); return; }
   switch (d.type) {
     case 'tree': c.fillStyle = '#8b5a2b'; c.fillRect(x - s * .06, y - s * .45, s * .12, s * .45); c.fillStyle = '#3fae49'; circ(c, x, y - s * .7, s * .32); circ(c, x - s * .2, y - s * .55, s * .22); circ(c, x + s * .2, y - s * .55, s * .22);
       c.fillStyle = themeS === 0 ? '#ffc2dc' : '#62cf5d'; circ(c, x - s * .1, y - s * .8, s * .07); circ(c, x + s * .12, y - s * .66, s * .06); circ(c, x - s * .2, y - s * .55, s * .05); break;
@@ -152,7 +158,7 @@ function spawnDecor(upTo) {
   while (nextDecor < upTo) {
     const side = Math.random() < .5 ? -1 : 1;
     decor.push({ s: nextDecor, X: side * rnd(2.3, theme.ditch ? 5.2 : 4.6) + (theme.ditch && Math.random() < .3 ? side * .5 : 0), type: pickOne(theme.decor), size: rnd(.8, 1.3), lean: side,
-      col: pickOne(['#ff6fb5', '#ffd23f', '#e8322f', '#9b59ff', '#ff8a2a']), col2: pickOne(['#e07a2e', '#c94a3a', '#f2b33d', '#b5651d']) });
+      col: pickOne(['#ff6fb5', '#ffd23f', '#e8322f', '#9b59ff', '#ff8a2a']), col2: pickOne(['#e07a2e', '#c94a3a', '#f2b33d', '#b5651d']), near: nearSprite() });
     nextDecor += rnd(1.2, 3.2);
   }
   decor = decor.filter(d => d.s - dist > ZNEAR);
@@ -195,7 +201,9 @@ function drawGateRow(r) {
     const yb = g - (.52 + bob) * s, yt = yb - ph;
     ctx.fillStyle = 'rgba(0,0,0,.14)'; ell(ctx, x, g, pw * .45, s * .07);
     const beam = r.golden ? 'rgba(255,214,64,.45)' : 'rgba(255,255,255,.4)';
-    ctx.fillStyle = beam; ctx.fillRect(x - pw / 2 + 2, yb, Math.max(2, s * .06), g - yb); ctx.fillRect(x + pw / 2 - 2 - Math.max(2, s * .06), yb, Math.max(2, s * .06), g - yb);
+    const arch = ART.img(r.resolved && !r.skipped ? (i === r.cl ? 'ui_gate_goed' : i === r.chosen ? 'ui_gate_fout' : 'ui_gate_normaal') : 'ui_gate_normaal');
+    if (arch) drawImgBottom(ctx, arch, x, g, pw * 1.22);
+    else { ctx.fillStyle = beam; ctx.fillRect(x - pw / 2 + 2, yb, Math.max(2, s * .06), g - yb); ctx.fillRect(x + pw / 2 - 2 - Math.max(2, s * .06), yb, Math.max(2, s * .06), g - yb); }
     let fill = '#ffffff', border = LANE_COL[i], ink = '#1f2a44';
     if (r.golden) { fill = '#ffe066'; border = '#f5a600'; }
     if (r.resolved) { if (r.skipped) { ctx.globalAlpha = alpha * .4; } else if (i === r.cl) { fill = '#3ccf6e'; border = '#1d8f45'; ink = '#fff'; } else if (i === r.chosen) { fill = '#ff7b7b'; border = '#d64545'; ink = '#fff'; } else ctx.globalAlpha = alpha * .45; }
@@ -261,4 +269,11 @@ function drawTutor() { // hand: eerst naar de goede baan, dan omhoog vegen
     ctx.save(); ctx.globalAlpha = .85 * e; ctx.fillStyle = '#ffd23f'; ctx.font = `700 ${Math.max(30, LANE * .4)}px ${FONT}`; ctx.textAlign = 'center'; ctx.fillText('⬆️', x, base - LANE * 1.35); ctx.restore(); }
   ctx.save(); ctx.globalAlpha = k < .85 ? 1 : (1 - k) / .15; ctx.font = `${Math.max(34, LANE * .55)}px ${FONT}`; ctx.textAlign = 'center'; ctx.textBaseline = 'top';
   ctx.fillStyle = 'rgba(255,255,255,.7)'; circ(ctx, CX + (r.cl - 1 - camX) * s, g - s * .85, s * .55 * (.8 + .2 * Math.sin(TG * 6))); ctx.fillText('👆', x, y); ctx.restore();
+}
+
+/* Grogs 'near'-decor: per seizoen een paar sprites; de helft van de bermdecor gebruikt ze (procedureel type blijft als terugval) */
+function nearSprite() {
+  if (Math.random() < .45) return null; const k = SEASONS[themeS].key, l = [];
+  for (let i = 0; i < 8; i++) if (ART.has('near_' + k + '_' + i)) l.push('near_' + k + '_' + i);
+  return l.length ? pickOne(l) : null;
 }

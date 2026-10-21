@@ -162,7 +162,7 @@ function drawVehicle(c, type, col, x, y, u, t, tilt, boost, ghost) {
   c.save(); c.translate(x, y); c.rotate(tilt || 0);
   if (ghost) c.globalAlpha = .45;
   c.fillStyle = 'rgba(20,30,50,.22)'; ell(c, 0, 0, u * .34, u * .07);
-  const im = ART.img('veh_' + type);
+  const im = tintedVeh(type, col);
   if (im) { c.translate(0, Math.sin(t * 20) * u * .005); drawImgBottom(c, im, 0, u * .02, u * .85); }
   else {
     const dark = shade(col, -.32), light = shade(col, .4);
@@ -171,4 +171,17 @@ function drawVehicle(c, type, col, x, y, u, t, tilt, boost, ghost) {
     (VDRAW[type] || VDRAW.bliksem)(c, u, ghost ? '#e9f3ff' : col, ghost ? '#8aa0c0' : dark, light, t, boost);
   }
   c.restore();
+}
+
+/* grijze voertuig-sprites inkleuren met multiply (+ alfa-masker), per kleur gecachet */
+const TINT = {};
+function tintedVeh(type, col) {
+  const im = ART.img('veh_' + type); if (!im) return null;
+  const k = type + col; if (TINT[k]) return TINT[k];
+  const keys = Object.keys(TINT); if (keys.length > 80) delete TINT[keys[0]];
+  const cv = document.createElement('canvas'); cv.width = im.width; cv.height = im.height; const c = cv.getContext('2d');
+  c.drawImage(im, 0, 0); c.globalCompositeOperation = 'multiply'; c.fillStyle = col || '#ff5a5f'; c.fillRect(0, 0, cv.width, cv.height);
+  c.globalCompositeOperation = 'destination-in'; c.drawImage(im, 0, 0);
+  c.globalCompositeOperation = 'source-over'; c.globalAlpha = .28; c.drawImage(im, 0, 0);   // glans terug
+  return (TINT[k] = cv);
 }

@@ -20,7 +20,7 @@ function finishLevel() {
     if (lv.boss && lv.w % 4 === 3 && !P.seasonsDone.includes(lv.s)) {
       P.seasonsDone.push(lv.s); const v = VEHICLES.find(x => x.s === lv.s && x.how === 'boss');
       if (v && !P.owned.veh.includes(v.id)) { P.owned.veh.push(v.id); info.banners.push(`🏆 Nieuw voertuig gewonnen: <b>${v.name}</b>! Kijk in de garage.`); }
-      info.banners.push(`${SEASONS[lv.s].icon} Je hebt het <b>${SEASONS[lv.s].name}kristal</b> terug!`); info.storyB = 'b' + lv.s;
+      info.banners.push(`${aimg('ui_kristal_' + SEASONS[lv.s].key, SEASONS[lv.s].icon, 'kri')} Je hebt het <b>${SEASONS[lv.s].name}kristal</b> terug!`); info.storyB = 'b' + lv.s;
     }
     if (lv.l === LPW - 1 && lv.w + 1 < WORLDS.length && WORLDS[lv.w + 1].s !== lv.s) info.banners.push(`${SEASONS[lv.s + 1].icon} Een nieuw seizoen gaat open: <b>${SEASONS[lv.s + 1].name}</b>!`);
   }
@@ -44,7 +44,7 @@ function renderEnd(info) {
   $('#endWorld').textContent = `${SEASONS[lv.s].icon} ${w.name} · ${lv.name}`;
   $('#endStars').innerHTML = [0, 1, 2].map(i => `<span class="${i < info.stars ? 'star-on' : 'star-off'}" style="animation-delay:${.15 + i * .25}s">★</span>`).join('');
   $('#endMsg').textContent = `${R.correct} van de ${R.done} sommen goed!` + (info.stars === 0 ? ' Oefenen maakt je sneller. Probeer het nog eens!' : '');
-  $('#endStats').innerHTML = `<span class="stat gold">🪙 +${R.coins} munten</span><span class="stat">🔥 Langste reeks: ${R.best}</span>` + (R.skips ? `<span class="stat">🎟️ ${R.skips} overgeslagen</span>` : '') + (R.bonusSeason ? `<span class="stat">${SEASONS[lv.s].icon} seizoensbonus</span>` : '');
+  $('#endStats').innerHTML = `<span class="stat gold">${aimg('ui_munt', '🪙')} +${R.coins} munten</span><span class="stat">🔥 Langste reeks: ${R.best}</span>` + (R.skips ? `<span class="stat">🎟️ ${R.skips} overgeslagen</span>` : '') + (R.bonusSeason ? `<span class="stat">${SEASONS[lv.s].icon} seizoensbonus</span>` : '');
   const order = [], byK = {};
   for (const r of R.results) { if (!byK[r.k]) { byK[r.k] = []; order.push(r.k); } byK[r.k].push(r); }
   $('#endChips').innerHTML = order.slice(0, 24).map(k => { const a = byK[k], cls = a[a.length - 1].ok ? (a[0].ok ? 'ok' : 'fix') : 'bad'; const it = buildItem(k); const t = it.q.length > 16 ? it.ans : it.q; return `<span class="chip ${cls}">${esc(t)}</span>`; }).join('');
@@ -81,9 +81,9 @@ function runRest(done) {
   P.restN = (P.restN || 0) + 1; save();
   const breathe = P.restN % 3 === 0;
   const lv = lastEnd ? LEVELS[lastEnd.id] : LEVELS[0];
-  const type = breathe ? 'adem' : pickOne(REST_BY_SEASON[lv.s]);
+  const anims = REST_ANIM_BY_SEASON[lv.s].filter(k => ART.has('rest_' + k)), type = breathe ? 'adem' : anims.length ? pickOne(anims) : pickOne(REST_BY_SEASON[lv.s]);
   REST = { type, t: 0, dur: (breathe ? 10 : 5) / SNEL, done, s: lv.s };
-  $('#restText').textContent = youngNow() ? (breathe ? '🫧 😌' : '☕ 🙂') : (breathe ? 'Even rust. Adem mee met het rondje…' : REST_TXT[type]) + (breathe ? '' : ' (tik om verder te gaan)');
+  $('#restText').textContent = youngNow() ? (breathe ? '🫧 😌' : '☕ 🙂') : (breathe ? 'Even rust. Adem mee met het rondje…' : REST_TXT[type] || REST_ANIM[type]) + (breathe ? '' : ' (tik om verder te gaan)');
   $('#restTitle').textContent = breathe ? '🫧 Adempauze' : '☕ Rustmoment';
   show('scrRest'); layoutRest();
 }
@@ -97,7 +97,12 @@ function drawRest(dt) {
   const th = THEMES[REST.s][0], g = c.createLinearGradient(0, 0, 0, h); g.addColorStop(0, th.sky[0]); g.addColorStop(.65, th.sky[1]); g.addColorStop(.651, th.grass[0]); g.addColorStop(1, th.grass[1]);
   c.fillStyle = g; c.fillRect(0, 0, w, h);
   const im = ART.img('rest_' + REST.type); const gy2 = h * .82, u = Math.min(w * .45, h * .5);
-  if (im) drawImgCover(c, im, 0, 0, w, h);
+  if (im && REST_ANIM[REST.type]) {   // sheet: 4 vierkante frames naast elkaar, 6 fps, grondlijn ~3% boven de onderrand
+    const fw = im.width / 4, fi = Math.floor(REST.t * 6) % 4, sz = Math.min(w * .8, h * .62);
+    c.fillStyle = 'rgba(0,0,0,.13)'; ell(c, w / 2, gy2, sz * .28, sz * .05);
+    c.drawImage(im, fi * fw, 0, fw, im.height, w / 2 - sz / 2, gy2 - sz * .97, sz, sz);
+  }
+  else if (im) drawImgCover(c, im, 0, 0, w, h);
   else switch (REST.type) {
     case 'adem': { const tt = REST.t * SNEL, ph = (1 - Math.cos(tt / 5 * Math.PI * 2)) / 2; c.fillStyle = 'rgba(255,255,255,.55)'; circ(c, w / 2, h * .42, u * (.25 + .3 * ph)); c.fillStyle = 'rgba(127,231,255,.5)'; circ(c, w / 2, h * .42, u * (.18 + .25 * ph));
       c.fillStyle = '#1f2a44'; c.font = `700 ${u * .12}px ${FONT}`; c.textAlign = 'center'; c.textBaseline = 'middle'; c.fillText(tt % 5 < 2.5 ? 'adem in…' : 'adem uit…', w / 2, h * .42);
@@ -126,25 +131,68 @@ function drawDecorAt(c, type, x, y, s) { c.fillStyle = '#7a4a2a'; c.fillRect(x -
 let STORYRUN = null;
 function playStory(key, done, force) {
   const st = STORY[key]; if (!st || (P.showStory === false && !force)) { done && done(); return; }
-  STORYRUN = { key, i: 0, done, t: 0 }; $('#storyTitle').textContent = '📖 ' + st.title; show('scrStory'); layoutStory(); renderStoryPanel();
+  const sl = (STRIP_FOR[key] || []).map(n => 'strip_' + String(n).padStart(2, '0')), strip = sl.length && sl.every(n => ART.has(n) && STRIPS[n]) ? sl : null;
+  STORYRUN = { key, i: 0, done, t: 0, strip, n: strip ? strip.length * 3 : st.p.length }; $('#storyTitle').textContent = '📖 ' + st.title; show('scrStory'); layoutStory(); renderStoryPanel();
 }
 function layoutStory() { const cn = $('#storyCv'), d = Math.min(2, devicePixelRatio || 1), r = cn.getBoundingClientRect(); cn.width = Math.round(r.width * d); cn.height = Math.round(r.height * d); if (STORYRUN) Object.assign(STORYRUN, { d, w: r.width, h: r.height }); }
 function renderStoryPanel() {
+  $('#scrStory').classList.toggle('strip', !!STORYRUN.strip);
+  if (STORYRUN.strip) {   // tekst staat in de getekende ballon op het canvas; de HTML-ballon blijft verborgen
+    $('#bubble').className = 'bubble narr'; $('#bubbleWho').textContent = ''; $('#bubbleText').textContent = stripLine().text; $('#bubblePic').textContent = '';
+    $('#storyDots').innerHTML = Array.from({ length: STORYRUN.n }, (_, i) => `<i class="${i === STORYRUN.i ? 'on' : ''}"></i>`).join('');
+    $('#btnStoryNext').textContent = STORYRUN.i < STORYRUN.n - 1 ? 'Verder ▶' : 'Racen! 🏁';
+    applyYoung(); syncStoryBtn(); SFX.page(); return;
+  }
   const st = STORY[STORYRUN.key], p = st.p[STORYRUN.i];
   const who = p[2] === 'l' ? p[0] : p[2] === 'r' ? p[1] : null;
   const name = who ? (who === 'player' ? P.name : CHAR_NAMES[who]) : '';
   $('#bubble').className = 'bubble ' + (p[2] === 'n' ? 'narr' : p[2]);
   $('#bubbleWho').textContent = name; $('#bubbleText').textContent = p[3].replace(/\{naam\}/g, P.name);
-  $('#storyDots').innerHTML = st.p.map((_, i) => `<i class="${i === STORYRUN.i ? 'on' : ''}"></i>`).join('');
-  $('#btnStoryNext').textContent = STORYRUN.i < st.p.length - 1 ? 'Verder ▶' : 'Racen! 🏁';
+  $('#storyDots').innerHTML = Array.from({ length: STORYRUN.n }, (_, i) => `<i class="${i === STORYRUN.i ? 'on' : ''}"></i>`).join('');
+  $('#btnStoryNext').textContent = STORYRUN.i < STORYRUN.n - 1 ? 'Verder ▶' : 'Racen! 🏁';
   const yp = youngNow() && STORY_PICS[STORYRUN.key]; $('#bubble').classList.toggle('pics', !!yp); $('#bubblePic').textContent = yp ? yp[STORYRUN.i] || '' : '';
   applyYoung(); syncStoryBtn();
   SFX.page();
 }
-function storyNext() { const st = STORY[STORYRUN.key]; if (STORYRUN.i < st.p.length - 1) { STORYRUN.i++; renderStoryPanel(); } else storyEnd(); }
+function storyNext() { if (STORYRUN.i < STORYRUN.n - 1) { STORYRUN.i++; renderStoryPanel(); } else storyEnd(); }
 function storyEnd() { if (!STORYRUN) return; P.story[STORYRUN.key] = 1; save(); const d = STORYRUN.done; STORYRUN = null; d ? d() : show('scrMenu'); }
+function stripLine() {
+  const R0 = STORYRUN, n = R0.strip[Math.floor(R0.i / 3)], pi = R0.i % 3, S = STRIPS[n], b = S.b.find(x => x[0] === pi) || S.b[pi];
+  const raw = b[5], ci = raw.indexOf(': '), who0 = ci > 0 ? raw.slice(0, ci) : '', text = ci > 0 ? raw.slice(ci + 2) : raw;
+  const who = who0 === 'Speler' ? P.name : who0, num = +n.slice(6);
+  return { n, pi, S, b, who, text, pic: (STRIP_PICS[num] || [])[pi] || '' };
+}
+function wrapFit(c, txt, w, h, max, weight) {   // grootste lettergrootte waarbij de tekst binnen w×h past
+  for (let fs = max; fs >= 8; fs -= 1) {
+    c.font = `${weight} ${fs}px ${FONT}`; const words = txt.split(' '), lines = []; let cur = '';
+    for (const wd of words) { const t2 = cur ? cur + ' ' + wd : wd; if (c.measureText(t2).width > w && cur) { lines.push(cur); cur = wd; } else cur = t2; }
+    lines.push(cur); if (lines.length * fs * 1.15 <= h && lines.every(l => c.measureText(l).width <= w)) return { fs, lines };
+  }
+  return { fs: 8, lines: [txt] };
+}
+function drawStrip(c, w, h, t) {
+  const L = stripLine(), im = ART.img(L.n); if (!im) return false;
+  const f = im.width / 1792, [px, py, pw, ph0] = L.S.p[L.pi];
+  let ph = ph0; for (const e of L.S.e) if (e[0] === L.pi) ph = Math.min(ph, e[2] - py);   // lege vlakken onderaan wegknippen
+  const ui = $('.storyui'), top = 46, bot = h - (ui ? ui.getBoundingClientRect().height : 120) - 8;
+  const ah = Math.max(80, bot - top), k = Math.min(w * .96 / pw, ah / ph) * f, dw = pw * k / f, dh = ph * k / f, dx = (w - dw) / 2, dy = top + (ah - dh) / 2;
+  c.fillStyle = '#1f2a44'; c.fillRect(0, 0, w, h);
+  c.globalAlpha = .35; drawImgCover(c, im, 0, 0, w, h); c.globalAlpha = 1;
+  c.save(); rr(c, dx, dy, dw, dh, 14); c.clip(); c.drawImage(im, px * f, py * f, pw * f, ph * f, dx, dy, dw, dh); c.restore();
+  c.strokeStyle = '#fff'; c.lineWidth = 4; rr(c, dx, dy, dw, dh, 14); c.stroke();
+  const s = k / f, [, bx, by, bw, bh] = L.b, mx = bw * .12, my = bh * .1;
+  const X = dx + (bx - px + mx) * s, Y = dy + (by - py + my) * s, Wd = (bw - mx * 2) * s, Hd = (bh * .8 - my * 1.2) * s;
+  c.textAlign = 'center'; c.textBaseline = 'top'; c.fillStyle = '#1f2a44';
+  if (youngNow()) { const r = wrapFit(c, L.pic, Wd, Hd, 64, 400); r.lines.forEach((l, i) => c.fillText(l, X + Wd / 2, Y + (Hd - r.lines.length * r.fs * 1.15) / 2 + i * r.fs * 1.15)); return true; }
+  const lab = L.who ? L.who : '', lh = lab ? Math.min(Hd * .24, 18) : 0;
+  if (lab) { c.font = `800 ${lh}px ${FONT}`; c.fillStyle = '#e8322f'; c.fillText(lab, X + Wd / 2, Y); c.fillStyle = '#1f2a44'; }
+  const r = wrapFit(c, L.text, Wd, Hd - lh * 1.15, 30, 700), y0 = Y + lh * 1.15 + (Hd - lh * 1.15 - r.lines.length * r.fs * 1.15) / 2;
+  r.lines.forEach((l, i) => c.fillText(l, X + Wd / 2, y0 + i * r.fs * 1.15));
+  return true;
+}
 function drawStory(dt) {
-  if (!STORYRUN || !STORYRUN.w) return; STORYRUN.t += dt; const st = STORY[STORYRUN.key], p = st.p[STORYRUN.i];
+  if (!STORYRUN || !STORYRUN.w) return; STORYRUN.t += dt;
+  if (STORYRUN.strip) { const cn0 = $('#storyCv'), c0 = cn0.getContext('2d'); c0.setTransform(STORYRUN.d, 0, 0, STORYRUN.d, 0, 0); if (drawStrip(c0, STORYRUN.w, STORYRUN.h, STORYRUN.t)) return; } const st = STORY[STORYRUN.key], p = st.p[STORYRUN.i];
   const cn = $('#storyCv'), c = cn.getContext('2d'), w = STORYRUN.w, h = STORYRUN.h, t = STORYRUN.t;
   c.setTransform(STORYRUN.d, 0, 0, STORYRUN.d, 0, 0);
   const sk = SEASONS[st.s].key, bg = ART.img('bg_' + sk);

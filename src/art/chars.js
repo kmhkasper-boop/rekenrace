@@ -83,8 +83,18 @@ const CDRAW = {
 function drawChar(c, id, x, y, s, mood, t, flip) {
   c.save(); c.translate(x, y); if (flip) c.scale(-1, 1);
   c.fillStyle = 'rgba(0,0,0,.15)'; ell(c, 0, 0, s * .3, s * .05);
-  const im = ART.img('char_' + id) || (id !== 'player' && ART.img('boss_' + id));
+  const im = charImg(id, mood);
   if (im) { c.translate(0, Math.sin(t * 2) * s * .01); drawImgBottom(c, im, 0, 0, s * .8 * im.width / Math.max(im.width, im.height) * (im.height > im.width ? 1 : 1.25)); }
   else { c.lineJoin = 'round'; (CDRAW[id] || CDRAW.pim)(c, s, mood || 0, t || 0); }
   c.restore();
 }
+
+/* Grogs personages: char_<id>_<0 blij|1 verrast|2 boos>; de speler krijgt racer a/b/c afhankelijk van de avatar */
+function charImg(id, mood) {
+  let k = id;
+  if (id === 'player') { const i = typeof P !== 'undefined' && P ? Math.max(0, AVATARS.indexOf(P.av)) : 0; k = 'speler_' + 'abc'[i % 3]; }
+  const m = mood === 2 ? 2 : mood === 1 ? 1 : 0;
+  return ART.img('char_' + k + '_' + m) || ART.img('char_' + k + '_0') || ART.img('char_' + id) || (id !== 'player' && ART.img('boss_' + id));
+}
+
+if (typeof CDRAW !== 'undefined' && !CDRAW.egel) CDRAW.egel = CDRAW.uil || CDRAW.pim;

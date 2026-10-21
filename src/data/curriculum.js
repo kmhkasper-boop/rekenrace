@@ -3,7 +3,7 @@
 const SEASONS = [
   { id: 0, key: 'lente', name: 'Lente', icon: '🌷', col: '#5fd27d', col2: '#ffb3d1', boss: 'kikker', bossName: 'Kikkerkoning', crystal: '#ff7eb6' },
   { id: 1, key: 'zomer', name: 'Zomer', icon: '☀️', col: '#ffb03b', col2: '#4cc3ff', boss: 'victor', bossName: 'Vulkaan-Victor', crystal: '#ffd23f' },
-  { id: 2, key: 'herfst', name: 'Herfst', icon: '🍂', col: '#e07a2e', col2: '#a0522d', boss: 'uil', bossName: 'Uil Komma', crystal: '#ff8a2a' },
+  { id: 2, key: 'herfst', name: 'Herfst', icon: '🍂', col: '#e07a2e', col2: '#a0522d', boss: 'egel', bossName: 'Egel-ridder', crystal: '#ff8a2a' },
   { id: 3, key: 'winter', name: 'Winter', icon: '❄️', col: '#4cc3ff', col2: '#b98aff', boss: 'chaos', bossName: 'Graaf Chaos', crystal: '#7fe7ff' },
 ];
 /* sk: vier groepjes nieuwe vaardigheden per wereld; groep = 'schatting' van het passende leerjaar; cito = vergelijkbaar functioneringsniveau (schatting) */

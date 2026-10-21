@@ -160,5 +160,5 @@ window.__rr = {
   SK, CAT, WORLDS, LEVELS, SEASONS, VEHICLES, STICKERS, STORY, MAKES, ASSET_FILES, player,
   parseKey, buildItem, makeOptions, pickKey, recordResult, startRide, playLevel, finishLevel, useVoucher, move, turbo, show, openLevel, openOuders,
   placeStart, placeAnswer, placeResult, applyPlacement, estimate, isOpen, nextLevel, setProfile, addProfile, migrateV1, loadG, endRest, storyEnd, storyNext,
-  reload() { G = loadG(); P = G.cur ? G.profiles[G.cur] : null; }, get curScreen() { return curScreen; }, qShow, youngItem, tapGate, commit, WORD_SKILLS, toggleWords, toggleStory,
+  reload() { G = loadG(); P = G.cur ? G.profiles[G.cur] : null; }, get curScreen() { return curScreen; }, qShow, youngItem, tapGate, commit, WORD_SKILLS, toggleWords, toggleStory, playStory, runRest, playLevelArt: playLevel,
 };
