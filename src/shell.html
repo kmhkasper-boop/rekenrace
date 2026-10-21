@@ -28,6 +28,7 @@
     <div id="hudTop">
       <button id="btnPause" class="iconbtn" aria-label="Pauze">⏸️</button>
       <div id="sumCard">
+        <button id="btnWords" class="wtoggle" aria-label="Verhaaltjessommen aan/uit">📖</button>
         <div id="sumGold">⭐ Gouden som: dubbele munten! ⭐</div>
         <canvas id="sumVis"></canvas>
         <div id="sumText">&nbsp;</div>
@@ -45,6 +46,7 @@
     <div id="fb"></div>
     <div id="tipCard" aria-live="polite"><div id="tipHead">Bijna!</div><div id="tipSum"></div><div id="tipText"></div></div>
     <div id="countBig"></div>
+    <div id="wFlash"></div>
     <div id="swipeHint">👆 Veeg ← → om te sturen · ↑ turbo</div>
     <button id="btnVoucher" aria-label="Sla deze som over">🎟️ Overslaan <b id="vCount">0</b></button>
     <button id="calmGo" class="btn green">🚀 Klaar? Rijden!</button>
@@ -116,6 +118,7 @@
     <h2 id="lvTitle" style="margin:0;font-size:1.25em"></h2>
     <div class="chips" id="lvSkills"></div>
     <div class="small-note" id="lvInfo"></div>
+    <button id="lvWords" class="wtoggle lvw" aria-label="Verhaaltjessommen aan/uit">📖</button>
     <b>👻 Spookrace</b>
     <div class="ghostsel" id="lvGhost"></div>
     <div class="btnrow"><button class="btn big green" id="btnLvGo">🏁 Start</button><button class="btn white" id="btnLvClose">Terug</button></div>
@@ -245,8 +248,9 @@
   <div id="storyTitle"></div>
   <button id="btnStorySkip">Overslaan ⏭</button>
   <div class="storyui">
+    <button id="btnStoryToggle" class="wtoggle stog" aria-label="Verhaal tonen aan/uit">📖</button>
     <div id="bubble" class="bubble narr"><div id="bubbleWho"></div><div id="bubblePic"></div><div id="bubbleText"></div></div>
-    <div class="dots" id="storyDots"></div>
+    <div class="dots" id="storyDots"></div><div id="sFlash"></div>
     <button class="btn green" id="btnStoryNext">Verder ▶</button>
   </div>
 </div>

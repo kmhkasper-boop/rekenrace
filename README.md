@@ -14,7 +14,7 @@ Graaf Chaos heeft de vier seizoenskristallen gestolen. Samen met Opa Tandwiel en
 - 🎟️ **Overslaan-bon**: ongeveer 1 per 3 levels (max. 3). De overgeslagen som komt later in de rit terug.
 - 🔥 **Combo-turbo** na 5 goed op rij.
 - ⚡ **Vroeg kiezen**: stuur naar een baan of tik op een antwoord en je auto versnelt meteen naar de poort. Snel goed = +1 munt.
-- 📖 **Verhaaltjessommen** zijn optioneel (bij het maken van het profiel, bij de eerste wereld en bij Ouders). Uit = dezelfde som, kaal.
+- 📖 **Verhaaltjessommen** zijn optioneel (bij het maken van het profiel, bij de eerste wereld en bij Ouders). Uit = dezelfde som, kaal. De speler kan dit zelf omzetten met het 📖-knopje naast de som (en op het levelscherm); in de strip zet 📖 naast de ballon het verhaal aan/uit.
 - 🧒 **Groep 1-2** (Lente-werelden 1-2): plaatjes in plaats van tekst (stippen, appels, getallenlijn), stippen-poorten, een wijzende hand als uitleg, iconen-menu en een plaatjesverhaal.
 
 ## Extra

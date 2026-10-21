@@ -81,6 +81,7 @@ function openLevel(id) {
   for (const pid of G.order) if (pid !== G.cur && G.profiles[pid].lv[id] && G.profiles[pid].lv[id].ghost) opts.push([pid, `👻 ${G.profiles[pid].av} ${G.profiles[pid].name}`]);
   const def = defaultGhost(id);
   $('#lvGhost').innerHTML = opts.map(([v, t]) => `<button data-ghost="${v}" class="${v === def ? 'on' : ''}">${esc(t)}</button>`).join('');
+  $('#lvWords').style.display = w.sk.flat().some(x => WORD_SKILLS.includes(x)) ? '' : 'none'; syncWordsBtn();
   $('#mdLevel').dataset.level = id; $('#mdLevel').classList.add('show');
 }
 /* ---------- garage ---------- */

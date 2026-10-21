@@ -138,7 +138,7 @@ function renderStoryPanel() {
   $('#storyDots').innerHTML = st.p.map((_, i) => `<i class="${i === STORYRUN.i ? 'on' : ''}"></i>`).join('');
   $('#btnStoryNext').textContent = STORYRUN.i < st.p.length - 1 ? 'Verder ▶' : 'Racen! 🏁';
   const yp = youngNow() && STORY_PICS[STORYRUN.key]; $('#bubble').classList.toggle('pics', !!yp); $('#bubblePic').textContent = yp ? yp[STORYRUN.i] || '' : '';
-  applyYoung();
+  applyYoung(); syncStoryBtn();
   SFX.page();
 }
 function storyNext() { const st = STORY[STORYRUN.key]; if (STORYRUN.i < st.p.length - 1) { STORYRUN.i++; renderStoryPanel(); } else storyEnd(); }
@@ -165,3 +165,6 @@ function confetti() {
   for (let i = 0; i < 70; i++) { const c = document.createElement('i'); c.style.left = Math.random() * 100 + '%'; c.style.background = pickOne(cols); c.style.animationDuration = rnd(1.8, 3.4) + 's'; c.style.animationDelay = rnd(0, .8) + 's'; box.appendChild(c); }
   document.body.appendChild(box); setTimeout(() => box.remove(), 4500);
 }
+
+function syncStoryBtn() { const b = $('#btnStoryToggle'), on = P.showStory !== false; b.classList.toggle('off', !on); b.setAttribute('aria-pressed', on ? 'true' : 'false'); }
+function toggleStory() { P.showStory = P.showStory === false; save(); SFX.click(); syncStoryBtn(); flash('#sFlash', P.showStory ? '📖 ✅' : '📖 ❌'); if ($('#mdOuders').classList.contains('show')) renderOuders(); }

@@ -291,6 +291,39 @@ const LAYOUTS = [[360, 640], [375, 667], [390, 844], [1280, 800]];
     await pg.evaluate(() => { show('scrPlace'); __rr.placeStart(); __rr.PL.w = 0; placeQ(); });
     ok(await pg.evaluate(() => getComputedStyle(document.querySelector('#plQ')).display === 'none' || document.querySelector('#plQ').textContent.length < 6), 'instaptest lage band zonder tekst');
     await pg.context().close(); }
+
+  /* 9. v2.2: speler-schakelaars naast de ballon */
+  console.log('▶ v2.2');
+  for (const vp of [[360, 640], [390, 844]]) { const tag = vp.join('x'); const pg = await page(vp, URL0 + '?snel=1'); await quickProfile(pg, 'Zelf');
+    // (a) verhaal
+    await pg.evaluate(() => { __rr.P.showStory = true; playStory('w6', () => show('scrMenu')); }); await pg.waitForTimeout(350);
+    const sb = await pg.evaluate(() => { const b = document.querySelector('#btnStoryToggle').getBoundingClientRect(), u = document.querySelector('#bubble').getBoundingClientRect(); return { w: b.width, h: b.height, ok: b.right <= innerWidth && b.left >= 0 && b.bottom <= u.top + 6 }; });
+    ok(sb.w >= 44 && sb.h >= 44 && sb.ok, `${tag} verhaal-knop groot genoeg, naast ballon ` + JSON.stringify(sb));
+    await pg.click('#btnStoryToggle'); await pg.waitForTimeout(250);
+    ok(await pg.evaluate(() => __rr.P.showStory === false && document.querySelector('#btnStoryToggle').classList.contains('off') && __rr.curScreen === 'scrStory'), `${tag} verhaal uit via ballon (scène blijft)`);
+    if (tag === '390x844') await pg.screenshot({ path: SHOTS + 'v22_verhaal_schakelaar.png' });
+    await pg.evaluate(() => __rr.openOuders()); ok(await pg.evaluate(() => document.querySelector('#segStory button.on').dataset.v === '0'), `${tag} gesynchroniseerd met ouders`);
+    await pg.evaluate(() => $('#mdOuders').classList.remove('show')); await pg.click('#btnStoryToggle'); ok(await pg.evaluate(() => __rr.P.showStory === true), `${tag} verhaal weer aan`);
+    await pg.evaluate(() => __rr.storyEnd());
+    // (b) verhaaltjessom in de race
+    await pg.evaluate(() => { __rr.P.words = true; __rr.P.wordsAsked = 1; __rr.P.unlockAll = true; __rr.P.calm = true; __rr.startRide('level', 15 * 9 + 5, 'none'); });
+    await pg.waitForFunction(() => { const r = __rr.R.row; if (r && !r.resolved && !r.it.bare && __rr.R.phase === 'run') __rr.commit(r); return r && !r.resolved && r.it.bare && r.age > .3; }, null, { timeout: 60000, polling: 100 });
+    await pg.waitForTimeout(200);
+    const wb = await pg.evaluate(() => { const b = document.querySelector('#btnWords').getBoundingClientRect(), r = __rr.R.row, s = sc(Math.min(r.z, ZP + 1.6)), gt = gy(Math.min(r.z, ZP + 1.6)) - s * 1.4; return { w: b.width, h: b.height, inView: b.right <= innerWidth + 1 && b.top >= 0, aboveGates: b.bottom < gt, txt: document.querySelector('#sumText').textContent, q: r.it.q }; });
+    ok(wb.w >= 44 && wb.inView && wb.aboveGates && wb.txt === wb.q, `${tag} verhaaltjes-knop naast som, niet over poorten ` + JSON.stringify(wb));
+    if (tag === '390x844' || tag === '360x640') await pg.screenshot({ path: SHOTS + `v22_som_schakelaar_aan_${tag}.png` });
+    await pg.click('#btnWords'); await pg.waitForTimeout(250);
+    const off = await pg.evaluate(() => ({ w: __rr.P.words, txt: document.querySelector('#sumText').textContent, bare: __rr.R.row.it.bare, offc: document.querySelector('#btnWords').classList.contains('off'), lane: __rr.player.lane, paused: __rr.R.paused, inView: (() => { const b = document.querySelector('#btnWords').getBoundingClientRect(), c = document.querySelector('#hudCoins').getBoundingClientRect(); return b.right <= innerWidth + 1 && c.right <= innerWidth + 1 && b.right <= c.left + 2; })() }));
+    ok(off.w === false && off.txt === off.bare && off.offc && off.lane === 1 && !off.paused && off.inView, `${tag} tik = meteen kale som, auto stuurt niet ` + JSON.stringify(off));
+    await pg.screenshot({ path: SHOTS + `v22_som_schakelaar_uit_${tag}.png` });
+    await pg.click('#btnWords'); ok(await pg.evaluate(() => __rr.P.words === true && document.querySelector('#sumText').textContent === __rr.R.row.it.q), `${tag} zelfde plek: weer aan`);
+    await pg.click('#btnWords');
+    await pg.evaluate(() => { __rr.R.phase = 'end'; __rr.P.calm = false; show('scrMap'); __rr.openLevel(15 * 9); });
+    ok(await pg.evaluate(() => getComputedStyle(document.querySelector('#lvWords')).display !== 'none' && document.querySelector('#lvWords').classList.contains('off')), `${tag} levelscherm toont schakelaar (uit)`);
+    if (tag === '390x844') await shot(pg, 'v22_level_schakelaar.png');
+    await pg.click('#lvWords'); ok(await pg.evaluate(() => __rr.P.words === true), `${tag} levelscherm: weer aan`);
+    ok(await pg.evaluate(() => { __rr.openLevel(0); return getComputedStyle(document.querySelector('#lvWords')).display === 'none'; }), `${tag} geen schakelaar in wereld zonder verhaaltjes`);
+    await pg.context().close(); }
   ok(ext.length === 0, 'externe verzoeken: ' + [...new Set(ext)].join(', '));
   ok(errs.length === 0, 'console-fouten: ' + [...new Set(errs)].slice(0, 5).join(' | '));
   await b.close();

@@ -346,6 +346,22 @@ body.young #btnPlay .yico{font-size:2.4em}
 #tipCard.young #tipSum{font-size:clamp(40px,11vw,72px);letter-spacing:2px}
 .pldots{color:#ff5a5f;font-size:.8em;letter-spacing:1px;line-height:1;word-break:break-all}
 
+.wtoggle{min-width:48px;height:48px;border-radius:14px;background:#fff;border:3px solid #6a3bd6;font-size:24px;padding:0 6px;box-shadow:var(--shadow);position:relative;line-height:1}
+.wtoggle::after{content:"✓";position:absolute;right:-7px;bottom:-7px;width:22px;height:22px;border-radius:50%;background:#2fbf5b;color:#fff;font-size:14px;font-weight:700;line-height:22px;text-align:center;box-shadow:0 0 0 2px #fff}
+.wtoggle.off{border-color:#9aa3b5;background:#eef1f6}
+.wtoggle.off::after{content:"✕";background:#d64545}
+#btnWords{display:none;position:absolute;right:2px;top:2px;width:48px;min-width:48px;height:48px;z-index:3;font-size:22px}
+#btnWords.show{display:inline-block}
+#sumCard{position:relative}
+#sumCard.hasw{padding-right:46px}
+.storyui{position:absolute}
+#btnStoryToggle{align-self:flex-end;margin-bottom:-4px}
+.lvw{margin:0 auto}
+#wFlash,#sFlash{position:absolute;left:50%;top:22%;transform:translate(-50%,-50%);font-size:46px;background:#fff;border-radius:22px;padding:.1em .4em;box-shadow:var(--shadow);opacity:0;pointer-events:none}
+#sFlash{top:auto;bottom:110%}
+#wFlash.show,#sFlash.show{animation:toast 1.1s ease forwards}
+#sumCard{min-width:0}#sumText{overflow:hidden}
+
 </style>
 <script>
 /* App-modus (PWA): service worker, installatietip en voortgang-brug voor iPad/iPhone. Raakt de spellogica niet. */
@@ -440,6 +456,7 @@ body.young #btnPlay .yico{font-size:2.4em}
     <div id="hudTop">
       <button id="btnPause" class="iconbtn" aria-label="Pauze">⏸️</button>
       <div id="sumCard">
+        <button id="btnWords" class="wtoggle" aria-label="Verhaaltjessommen aan/uit">📖</button>
         <div id="sumGold">⭐ Gouden som: dubbele munten! ⭐</div>
         <canvas id="sumVis"></canvas>
         <div id="sumText">&nbsp;</div>
@@ -457,6 +474,7 @@ body.young #btnPlay .yico{font-size:2.4em}
     <div id="fb"></div>
     <div id="tipCard" aria-live="polite"><div id="tipHead">Bijna!</div><div id="tipSum"></div><div id="tipText"></div></div>
     <div id="countBig"></div>
+    <div id="wFlash"></div>
     <div id="swipeHint">👆 Veeg ← → om te sturen · ↑ turbo</div>
     <button id="btnVoucher" aria-label="Sla deze som over">🎟️ Overslaan <b id="vCount">0</b></button>
     <button id="calmGo" class="btn green">🚀 Klaar? Rijden!</button>
@@ -528,6 +546,7 @@ body.young #btnPlay .yico{font-size:2.4em}
     <h2 id="lvTitle" style="margin:0;font-size:1.25em"></h2>
     <div class="chips" id="lvSkills"></div>
     <div class="small-note" id="lvInfo"></div>
+    <button id="lvWords" class="wtoggle lvw" aria-label="Verhaaltjessommen aan/uit">📖</button>
     <b>👻 Spookrace</b>
     <div class="ghostsel" id="lvGhost"></div>
     <div class="btnrow"><button class="btn big green" id="btnLvGo">🏁 Start</button><button class="btn white" id="btnLvClose">Terug</button></div>
@@ -657,8 +676,9 @@ body.young #btnPlay .yico{font-size:2.4em}
   <div id="storyTitle"></div>
   <button id="btnStorySkip">Overslaan ⏭</button>
   <div class="storyui">
+    <button id="btnStoryToggle" class="wtoggle stog" aria-label="Verhaal tonen aan/uit">📖</button>
     <div id="bubble" class="bubble narr"><div id="bubbleWho"></div><div id="bubblePic"></div><div id="bubbleText"></div></div>
-    <div class="dots" id="storyDots"></div>
+    <div class="dots" id="storyDots"></div><div id="sFlash"></div>
     <button class="btn green" id="btnStoryNext">Verder ▶</button>
   </div>
 </div>
@@ -2253,11 +2273,11 @@ function spawnNext() {
   if (!(pick.k in R.before)) R.before[pick.k] = boxOf(pick.k);
   $('#tipCard').classList.remove('show');
   const card = $('#sumCard'), qq = qShow(it, R.young); setSumText(qq); showVis(it.vis);
-  card.className = (golden ? 'gold' : '') + (it.vis ? ' hasvis' : '') + (R.young && it.vis && !qq ? ' pic' : ''); void card.offsetWidth; card.classList.add('pop');
+  card.className = (golden ? 'gold' : '') + (it.vis ? ' hasvis' : '') + (R.young && it.vis && !qq ? ' pic' : ''); syncWordsBtn(); void card.offsetWidth; card.classList.add('pop');
   $('#calmGo').classList.remove('show');
 }
 function resolve(row) {
-  row.resolved = true; row.tRes = TG; row.chosen = player.lane; row.ok = row.opts[row.chosen] === row.it.ans;
+  row.resolved = true; row.tRes = TG; $('#btnWords').classList.remove('show'); row.chosen = player.lane; row.ok = row.opts[row.chosen] === row.it.ans;
   const it = row.it, cross = R.clock - row.spawn - row.waitT, fast = (it.fast || 4) / SNEL;
   const rt = row.lastMove != null ? row.lastMove : row.turbo ? row.turboAt : Math.min(cross, fast);
   recordResult(it.k, row.s, row.ok, rt * SNEL, fast * SNEL);
@@ -2383,6 +2403,21 @@ function tapGate(cx, cy) {
   if (bd > s * .6) return false;
   const d = best - player.lane; if (d) { player.lane = best; SFX.lane(); r.lastMove = R.clock - r.spawn - r.waitT; }
   commit(r); return true;
+}
+
+/* verhaaltjessommen aan/uit, direct naast de som */
+function syncWordsBtn() {
+  const b = $('#btnWords'), it = R && R.row && !R.row.resolved && R.row.it, on = P.words !== false;
+  const vis = !!(it && it.bare); b.classList.toggle('show', vis); b.classList.toggle('off', !on); $('#sumCard').classList.toggle('hasw', vis); fitSum();
+  b.setAttribute('aria-pressed', on ? 'true' : 'false');
+  const lb = $('#lvWords'); if (lb) lb.classList.toggle('off', !on);
+}
+function flash(id, txt) { const el = $(id); el.textContent = txt; el.classList.remove('show'); void el.offsetWidth; el.classList.add('show'); }
+function toggleWords() {
+  P.words = P.words === false; P.wordsAsked = 1; save(); SFX.click();
+  if (R && R.row && !R.row.resolved) { const qq = qShow(R.row.it, R.young); setSumText(qq); }
+  syncWordsBtn(); flash('#wFlash', P.words ? '📖 ✅' : '🔢 ✅');
+  if ($('#mdOuders').classList.contains('show')) renderOuders();
 }
 
 /* ---- ui/flow.js ---- */
@@ -2526,7 +2561,7 @@ function renderStoryPanel() {
   $('#storyDots').innerHTML = st.p.map((_, i) => `<i class="${i === STORYRUN.i ? 'on' : ''}"></i>`).join('');
   $('#btnStoryNext').textContent = STORYRUN.i < st.p.length - 1 ? 'Verder ▶' : 'Racen! 🏁';
   const yp = youngNow() && STORY_PICS[STORYRUN.key]; $('#bubble').classList.toggle('pics', !!yp); $('#bubblePic').textContent = yp ? yp[STORYRUN.i] || '' : '';
-  applyYoung();
+  applyYoung(); syncStoryBtn();
   SFX.page();
 }
 function storyNext() { const st = STORY[STORYRUN.key]; if (STORYRUN.i < st.p.length - 1) { STORYRUN.i++; renderStoryPanel(); } else storyEnd(); }
@@ -2553,6 +2588,9 @@ function confetti() {
   for (let i = 0; i < 70; i++) { const c = document.createElement('i'); c.style.left = Math.random() * 100 + '%'; c.style.background = pickOne(cols); c.style.animationDuration = rnd(1.8, 3.4) + 's'; c.style.animationDelay = rnd(0, .8) + 's'; box.appendChild(c); }
   document.body.appendChild(box); setTimeout(() => box.remove(), 4500);
 }
+
+function syncStoryBtn() { const b = $('#btnStoryToggle'), on = P.showStory !== false; b.classList.toggle('off', !on); b.setAttribute('aria-pressed', on ? 'true' : 'false'); }
+function toggleStory() { P.showStory = P.showStory === false; save(); SFX.click(); syncStoryBtn(); flash('#sFlash', P.showStory ? '📖 ✅' : '📖 ❌'); if ($('#mdOuders').classList.contains('show')) renderOuders(); }
 
 /* ---- ui/screens.js ---- */
 /* ===== schermen ===== */
@@ -2638,6 +2676,7 @@ function openLevel(id) {
   for (const pid of G.order) if (pid !== G.cur && G.profiles[pid].lv[id] && G.profiles[pid].lv[id].ghost) opts.push([pid, `👻 ${G.profiles[pid].av} ${G.profiles[pid].name}`]);
   const def = defaultGhost(id);
   $('#lvGhost').innerHTML = opts.map(([v, t]) => `<button data-ghost="${v}" class="${v === def ? 'on' : ''}">${esc(t)}</button>`).join('');
+  $('#lvWords').style.display = w.sk.flat().some(x => WORD_SKILLS.includes(x)) ? '' : 'none'; syncWordsBtn();
   $('#mdLevel').dataset.level = id; $('#mdLevel').classList.add('show');
 }
 /* ---------- garage ---------- */
@@ -2878,7 +2917,7 @@ document.addEventListener('click', e => {
   if (pid === 'segUnlock') { P.unlockAll = t.dataset.v === '1'; save(); renderOuders(); return; }
   if (pid === 'segPace') { P.pace = t.dataset.v; save(); renderOuders(); return; }
   if (pid === 'segCalm') { P.calm = t.dataset.v === '1'; save(); renderOuders(); return; }
-  if (pid === 'segWords') { P.words = t.dataset.v === '1'; P.wordsAsked = 1; save(); renderOuders(); return; }
+  if (pid === 'segWords') { P.words = t.dataset.v === '1'; P.wordsAsked = 1; save(); renderOuders(); syncWordsBtn(); return; }
   if (pid === 'segStory') { P.showStory = t.dataset.v === '1'; save(); renderOuders(); return; }
   if (t.classList.contains('mutebtn') || t.id === 'btnMute2') { G.muted = !G.muted; save(); syncMute(); if (!G.muted) SFX.click(); return; }
 });
@@ -2904,6 +2943,9 @@ on('#btnResume', () => { SFX.click(); resumeGame(); });
 on('#btnCalm', () => { P.calm = !P.calm; save(); syncCalm(); $('#game').classList.toggle('calm', P.calm); if (!P.calm) $('#calmGo').classList.remove('show'); });
 on('#btnQuit', () => { const m = R && R.mode; SFX.click(); R = null; if (m === 'dag') show('scrDag'); else { if (lastRide && lastRide.levelId != null) mapSeason = LEVELS[lastRide.levelId].s; show('scrMap'); } });
 on('#btnVoucher', () => { useVoucher(); });
+on('#btnWords', e => { e.stopPropagation(); toggleWords(); });
+on('#lvWords', () => toggleWords());
+on('#btnStoryToggle', e => { e.stopPropagation(); toggleStory(); });
 on('#calmGo', () => { turbo(); });
 on('#btnRestSkip', () => { endRest(); });
 $('#scrRest').addEventListener('click', e => { if (REST && (REST.type !== 'adem' || REST.t * SNEL >= 3)) endRest(); });
@@ -2990,7 +3032,7 @@ window.__rr = {
   SK, CAT, WORLDS, LEVELS, SEASONS, VEHICLES, STICKERS, STORY, MAKES, ASSET_FILES, player,
   parseKey, buildItem, makeOptions, pickKey, recordResult, startRide, playLevel, finishLevel, useVoucher, move, turbo, show, openLevel, openOuders,
   placeStart, placeAnswer, placeResult, applyPlacement, estimate, isOpen, nextLevel, setProfile, addProfile, migrateV1, loadG, endRest, storyEnd, storyNext,
-  reload() { G = loadG(); P = G.cur ? G.profiles[G.cur] : null; }, get curScreen() { return curScreen; }, qShow, youngItem, tapGate, commit, WORD_SKILLS,
+  reload() { G = loadG(); P = G.cur ? G.profiles[G.cur] : null; }, get curScreen() { return curScreen; }, qShow, youngItem, tapGate, commit, WORD_SKILLS, toggleWords, toggleStory,
 };
 
 </script>

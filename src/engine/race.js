@@ -112,11 +112,11 @@ function spawnNext() {
   if (!(pick.k in R.before)) R.before[pick.k] = boxOf(pick.k);
   $('#tipCard').classList.remove('show');
   const card = $('#sumCard'), qq = qShow(it, R.young); setSumText(qq); showVis(it.vis);
-  card.className = (golden ? 'gold' : '') + (it.vis ? ' hasvis' : '') + (R.young && it.vis && !qq ? ' pic' : ''); void card.offsetWidth; card.classList.add('pop');
+  card.className = (golden ? 'gold' : '') + (it.vis ? ' hasvis' : '') + (R.young && it.vis && !qq ? ' pic' : ''); syncWordsBtn(); void card.offsetWidth; card.classList.add('pop');
   $('#calmGo').classList.remove('show');
 }
 function resolve(row) {
-  row.resolved = true; row.tRes = TG; row.chosen = player.lane; row.ok = row.opts[row.chosen] === row.it.ans;
+  row.resolved = true; row.tRes = TG; $('#btnWords').classList.remove('show'); row.chosen = player.lane; row.ok = row.opts[row.chosen] === row.it.ans;
   const it = row.it, cross = R.clock - row.spawn - row.waitT, fast = (it.fast || 4) / SNEL;
   const rt = row.lastMove != null ? row.lastMove : row.turbo ? row.turboAt : Math.min(cross, fast);
   recordResult(it.k, row.s, row.ok, rt * SNEL, fast * SNEL);
@@ -242,4 +242,19 @@ function tapGate(cx, cy) {
   if (bd > s * .6) return false;
   const d = best - player.lane; if (d) { player.lane = best; SFX.lane(); r.lastMove = R.clock - r.spawn - r.waitT; }
   commit(r); return true;
+}
+
+/* verhaaltjessommen aan/uit, direct naast de som */
+function syncWordsBtn() {
+  const b = $('#btnWords'), it = R && R.row && !R.row.resolved && R.row.it, on = P.words !== false;
+  const vis = !!(it && it.bare); b.classList.toggle('show', vis); b.classList.toggle('off', !on); $('#sumCard').classList.toggle('hasw', vis); fitSum();
+  b.setAttribute('aria-pressed', on ? 'true' : 'false');
+  const lb = $('#lvWords'); if (lb) lb.classList.toggle('off', !on);
+}
+function flash(id, txt) { const el = $(id); el.textContent = txt; el.classList.remove('show'); void el.offsetWidth; el.classList.add('show'); }
+function toggleWords() {
+  P.words = P.words === false; P.wordsAsked = 1; save(); SFX.click();
+  if (R && R.row && !R.row.resolved) { const qq = qShow(R.row.it, R.young); setSumText(qq); }
+  syncWordsBtn(); flash('#wFlash', P.words ? '📖 ✅' : '🔢 ✅');
+  if ($('#mdOuders').classList.contains('show')) renderOuders();
 }

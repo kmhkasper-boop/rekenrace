@@ -39,7 +39,7 @@ document.addEventListener('click', e => {
   if (pid === 'segUnlock') { P.unlockAll = t.dataset.v === '1'; save(); renderOuders(); return; }
   if (pid === 'segPace') { P.pace = t.dataset.v; save(); renderOuders(); return; }
   if (pid === 'segCalm') { P.calm = t.dataset.v === '1'; save(); renderOuders(); return; }
-  if (pid === 'segWords') { P.words = t.dataset.v === '1'; P.wordsAsked = 1; save(); renderOuders(); return; }
+  if (pid === 'segWords') { P.words = t.dataset.v === '1'; P.wordsAsked = 1; save(); renderOuders(); syncWordsBtn(); return; }
   if (pid === 'segStory') { P.showStory = t.dataset.v === '1'; save(); renderOuders(); return; }
   if (t.classList.contains('mutebtn') || t.id === 'btnMute2') { G.muted = !G.muted; save(); syncMute(); if (!G.muted) SFX.click(); return; }
 });
@@ -65,6 +65,9 @@ on('#btnResume', () => { SFX.click(); resumeGame(); });
 on('#btnCalm', () => { P.calm = !P.calm; save(); syncCalm(); $('#game').classList.toggle('calm', P.calm); if (!P.calm) $('#calmGo').classList.remove('show'); });
 on('#btnQuit', () => { const m = R && R.mode; SFX.click(); R = null; if (m === 'dag') show('scrDag'); else { if (lastRide && lastRide.levelId != null) mapSeason = LEVELS[lastRide.levelId].s; show('scrMap'); } });
 on('#btnVoucher', () => { useVoucher(); });
+on('#btnWords', e => { e.stopPropagation(); toggleWords(); });
+on('#lvWords', () => toggleWords());
+on('#btnStoryToggle', e => { e.stopPropagation(); toggleStory(); });
 on('#calmGo', () => { turbo(); });
 on('#btnRestSkip', () => { endRest(); });
 $('#scrRest').addEventListener('click', e => { if (REST && (REST.type !== 'adem' || REST.t * SNEL >= 3)) endRest(); });
@@ -151,5 +154,5 @@ window.__rr = {
   SK, CAT, WORLDS, LEVELS, SEASONS, VEHICLES, STICKERS, STORY, MAKES, ASSET_FILES, player,
   parseKey, buildItem, makeOptions, pickKey, recordResult, startRide, playLevel, finishLevel, useVoucher, move, turbo, show, openLevel, openOuders,
   placeStart, placeAnswer, placeResult, applyPlacement, estimate, isOpen, nextLevel, setProfile, addProfile, migrateV1, loadG, endRest, storyEnd, storyNext,
-  reload() { G = loadG(); P = G.cur ? G.profiles[G.cur] : null; }, get curScreen() { return curScreen; }, qShow, youngItem, tapGate, commit, WORD_SKILLS,
+  reload() { G = loadG(); P = G.cur ? G.profiles[G.cur] : null; }, get curScreen() { return curScreen; }, qShow, youngItem, tapGate, commit, WORD_SKILLS, toggleWords, toggleStory,
 };
