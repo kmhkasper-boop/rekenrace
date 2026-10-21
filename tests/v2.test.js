@@ -231,19 +231,37 @@ const LAYOUTS = [[360, 640], [375, 667], [390, 844], [1280, 800]];
   { const pg = await page([390, 844], URL0 + '?snel=1'); await quickProfile(pg, 'Snel');
     await pg.evaluate(() => { __rr.P.unlockAll = true; __rr.P.wordsAsked = 1; __rr.P.seenHint = 9; __rr.startRide('level', 40, 'none'); });
     await pg.waitForFunction(() => __rr.R.phase === 'run' && __rr.R.row && !__rr.R.row.resolved && __rr.R.row.age > .2, null, { timeout: 15000 });
-    const t0 = await pg.evaluate(() => { const r = __rr.R.row, c = r.cl, d = c - __rr.player.lane; if (d) move(Math.sign(d)); else { const s = sc(r.z); __rr.tapGate(CX + (c - 1 - camX) * s, gy(r.z) - s * .8); } return { z: r.z, coins: __rr.P.coins }; });
-    await pg.waitForTimeout(330); await pg.screenshot({ path: SHOTS + 'v21_vroeg_versnellen.png' });
-    const c1 = await pg.evaluate(() => ({ committed: __rr.R.results.length ? true : __rr.R.row.committed, res: __rr.R.results.length }));
-    ok(c1.committed, 'sturen naar baan = versnellen');
+    const t0 = await pg.evaluate(() => { const r = __rr.R.row, c = r.cl, d = c - __rr.player.lane; if (d) move(Math.sign(d)); return { z: r.z, coins: __rr.P.coins, lane: __rr.player.lane, cl: c }; });
+    ok(t0.lane === t0.cl, 'sturen naar goede baan');
+    await pg.waitForTimeout(600);
+    ok(await pg.evaluate(() => !__rr.R.row.committed && !__rr.R.row.resolved), 'baan wisselen versnelt NIET meer');
+    await pg.keyboard.press('ArrowUp'); await pg.waitForTimeout(150); await pg.screenshot({ path: SHOTS + 'v21_vroeg_versnellen.png' });
+    ok(await pg.evaluate(() => __rr.R.results.length >= 1 || __rr.R.row.committed), '↑ = versnellen');
     await pg.waitForFunction(() => __rr.R.results.length >= 1, null, { timeout: 3000 }).catch(() => { });
     const c2 = await pg.evaluate(() => ({ n: __rr.R.results.length, ok: __rr.R.results[0] && __rr.R.results[0].ok, fastN: __rr.R.fastN, coins: __rr.P.coins }));
-    ok(c2.n === 1 && c2.ok, 'vroeg gekozen poort binnen ~1 s bereikt (' + JSON.stringify(c2) + ')');
+    ok(c2.n === 1 && c2.ok, 'na ↑ poort binnen ~1 s bereikt (' + JSON.stringify(c2) + ')');
     ok(c2.fastN === 1 && c2.coins - t0.coins >= 3, 'snelle bonus (+1 munt)');
-    // tik op antwoordpoort
+    // tik op poort = alleen sturen; vasthouden = versnellen
     await pg.waitForFunction(() => __rr.R.row && !__rr.R.row.resolved && __rr.R.row.age > .3, null, { timeout: 15000 });
-    const g = await pg.evaluate(() => { const r = __rr.R.row, want = (r.cl + 1) % 3, s = sc(r.z), y = gy(r.z) - s * .8, x = CX + (want - 1 - camX) * s; return { x, y, want }; });
-    await pg.mouse.click(g.x, g.y);
-    ok(await pg.evaluate(w => __rr.R.results.length >= 2 || (__rr.player.lane === w && __rr.R.row.committed), g.want), 'tik op poort = kiezen + versnellen');
+    let g = await pg.evaluate(() => { const r = __rr.R.row, want = (__rr.player.lane + 1) % 3, s = sc(r.z), y = gy(r.z) - s * .8, x = CX + (want - 1 - camX) * s; return { x, y, want }; });
+    await pg.mouse.click(g.x, g.y); await pg.waitForTimeout(500);
+    ok(await pg.evaluate(w => __rr.player.lane === w && !__rr.R.row.committed && !__rr.R.row.resolved, g.want), 'tik op poort = sturen, niet versnellen');
+    g = await pg.evaluate(() => { const r = __rr.R.row, want = (__rr.player.lane + 2) % 3, s = sc(r.z), y = gy(r.z) - s * .8, x = CX + (want - 1 - camX) * s; return { x, y, want }; });
+    await pg.mouse.move(g.x, g.y); await pg.mouse.down(); await pg.waitForTimeout(500); await pg.mouse.up();
+    ok(await pg.evaluate(w => __rr.player.lane === w && (__rr.R.row.committed || __rr.R.results.length >= 3), g.want), 'vasthouden op poort = sturen + versnellen');
+    // vegen omhoog (aanraking) vs. opzij
+    await pg.waitForFunction(() => __rr.R.row && !__rr.R.row.resolved && !__rr.R.row.committed && __rr.R.row.age > .3, null, { timeout: 15000 });
+    const sw = await pg.evaluate(async () => { const el = document.querySelector('#game'), ev = (t, x, y) => el.dispatchEvent(new PointerEvent(t, { pointerId: 7, clientX: x, clientY: y, bubbles: true }));
+      const l0 = __rr.player.lane; ev('pointerdown', 200, 600); ev('pointermove', 205, 560); ev('pointermove', 210, 520); ev('pointerup', 210, 520); return { same: __rr.player.lane === l0, c: __rr.R.row.committed }; });
+    ok(sw.same && sw.c, 'veeg omhoog = versnellen zonder baanwissel');
+    await pg.waitForFunction(() => __rr.R.row && !__rr.R.row.resolved && !__rr.R.row.committed && __rr.R.row.age > .3, null, { timeout: 15000 });
+    const sw2 = await pg.evaluate(() => { const el = document.querySelector('#game'), ev = (t, x, y) => el.dispatchEvent(new PointerEvent(t, { pointerId: 8, clientX: x, clientY: y, bubbles: true }));
+      const l0 = __rr.player.lane; ev('pointerdown', 200, 600); ev('pointermove', 260, 580); ev('pointerup', 260, 580); return { moved: __rr.player.lane !== l0 || l0 === 2, c: !!__rr.R.row.committed }; });
+    ok(sw2.moved && !sw2.c, 'schuine veeg opzij = alleen sturen');
+    await pg.evaluate(() => { __rr.R.phase = 'end'; __rr.P.seenHint = 0; __rr.startRide('level', 40, 'none'); });
+    await pg.waitForFunction(() => __rr.R.phase === 'run' && __rr.R.row && __rr.R.row.age > .4, null, { timeout: 15000 });
+    ok(await pg.evaluate(() => /⬆️/.test(document.querySelector('#swipeHint').textContent) && /✋/.test(document.querySelector('#swipeHint').textContent) && document.querySelector('#swipeHint').classList.contains('show')), 'hint toont ⬆️ / ✋');
+    await pg.screenshot({ path: SHOTS + 'v23_hint_versnellen.png' });
     await pg.evaluate(() => { __rr.R.phase = 'end'; show('scrMenu'); });
     // verhaaltjessommen uit
     const w = await pg.evaluate(() => { __rr.P.words = false; const out = []; for (const s of __rr.WORD_SKILLS) for (let i = 0; i < 60; i++) { const it = __rr.buildItem(__rr.SK[s].gen()), q = __rr.qShow(it, false); out.push([s, !!it.bare, /[a-z]{5,}/i.test(q.replace(/€|min|uur|km/g, '')), q]); } return out.filter(x => !x[1] || x[2]).slice(0, 5); });

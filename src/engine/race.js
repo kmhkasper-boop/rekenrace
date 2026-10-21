@@ -41,7 +41,7 @@ function startRide(mode, levelId, ghostPref) {
   $('#tipCard').classList.remove('show');
   $('#sumCard').className = ''; setSumText(lv ? `${WORLDS[lv.w].name} · ${lv.name}` : '1 minuut!'); showVis(null);
   show('game'); layout(); spawnDecor(dist + ZFAR);
-  $('#swipeHint').textContent = R.young ? '👈 👆 👉' : '👆 Veeg ← → of tik op een antwoord · ↑ turbo'; $('#swipeHint').classList.toggle('show', (P.seenHint || 0) < 3 && !R.tutor);
+  $('#swipeHint').textContent = R.young ? '👈 👉  ⬆️' : '👈 👉 sturen · ⬆️ of ✋ vasthouden = versnellen'; $('#swipeHint').classList.toggle('show', (P.seenHint || 0) < 3 && !R.tutor);
   updateHud();
 }
 function speedLevel() { return Math.floor((R.Tb[2] - R.T) / (R.Tb[2] - R.Tb[1]) * 4 + 1e-6); }
@@ -118,7 +118,7 @@ function spawnNext() {
 function resolve(row) {
   row.resolved = true; row.tRes = TG; $('#btnWords').classList.remove('show'); row.chosen = player.lane; row.ok = row.opts[row.chosen] === row.it.ans;
   const it = row.it, cross = R.clock - row.spawn - row.waitT, fast = (it.fast || 4) / SNEL;
-  const rt = row.lastMove != null ? row.lastMove : row.turbo ? row.turboAt : Math.min(cross, fast);
+  const rt = row.turbo ? row.turboAt : row.lastMove != null ? row.lastMove : Math.min(cross, fast);
   recordResult(it.k, row.s, row.ok, rt * SNEL, fast * SNEL);
   R.done++;
   R.results.push({ k: it.k, q: it.q, ans: it.ans, ok: row.ok, rt: +(rt * SNEL).toFixed(2), repeat: row.repeat, golden: row.golden, chosen: row.opts[row.chosen] });
@@ -202,7 +202,6 @@ function update(dt) {
   const vGate = (ZS - ZP) / effT() * SNEL;
   const row = R.row;
   if (row && !row.resolved) {
-    if (row.commitAt != null && !row.turbo && R.clock >= row.commitAt) commit(row);
     const hold = P.calm && !row.turbo && row.z <= ZP + 1.6;
     if (hold) { row.waitT += dt; if (!$('#calmGo').classList.contains('show')) $('#calmGo').classList.add('show'); }
     else row.z -= (row.committed ? Math.max(vGate * 6, 14 * SNEL) : vGate * (row.turbo ? 3.5 : 1)) * dt;
@@ -216,15 +215,14 @@ function update(dt) {
 function move(d) {
   if (!R || R.paused || R.phase === 'end') return;
   const nl2 = clamp(player.lane + d, 0, 2);
-  if (nl2 === player.lane) { player.tilt = d * .25; if (R.row && !R.row.resolved && R.phase === 'run') commit(R.row); return; }
+  if (nl2 === player.lane) { player.tilt = d * .25; return; }
   player.lane = nl2; SFX.lane();
-  if (R.row && !R.row.resolved) { R.row.lastMove = R.clock - R.row.spawn - R.row.waitT; if (R.phase === 'run') R.row.commitAt = R.clock + .28 / SNEL; }
+  if (R.row && !R.row.resolved) R.row.lastMove = R.clock - R.row.spawn - R.row.waitT;
   if ($('#swipeHint').classList.contains('show') && R.phase === 'run') $('#swipeHint').classList.remove('show');
 }
 function turbo() {
   if (!R || R.paused || R.phase !== 'run') return;
-  const r = R.row; if (!r || r.resolved || r.turbo) return;
-  r.turbo = true; r.turboAt = R.clock - r.spawn - r.waitT; boostT = .6; SFX.speed(); $('#calmGo').classList.remove('show');
+  commit(R.row);
 }
 
 /* vroeg kiezen: de auto versnelt meteen naar de poort */
@@ -241,7 +239,7 @@ function tapGate(cx, cy) {
   let best = -1, bd = 1e9; for (let i = 0; i < 3; i++) { const x = CX + (i - 1 - camX) * s, d = Math.abs(cx - x); if (d < bd) { bd = d; best = i; } }
   if (bd > s * .6) return false;
   const d = best - player.lane; if (d) { player.lane = best; SFX.lane(); r.lastMove = R.clock - r.spawn - r.waitT; }
-  commit(r); return true;
+  return true;
 }
 
 /* verhaaltjessommen aan/uit, direct naast de som */

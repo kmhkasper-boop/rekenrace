@@ -91,16 +91,20 @@ on('#btnDelProf', e => { const b = e.currentTarget;
 holdButton($('#btnParent'), 2000, openOuders);
 
 // --- sturen met vinger/muis/toetsen ---
-const gameEl = $('#game'); let ptr = null;
-gameEl.addEventListener('pointerdown', e => { if (e.target.closest('button')) return; ptr = { id: e.pointerId, x0: e.clientX, y0: e.clientY, x: e.clientX, y: e.clientY, t: performance.now(), moves: 0 }; });
+const gameEl = $('#game'); let ptr = null, holdT = 0;
+gameEl.addEventListener('pointerdown', e => { if (e.target.closest('button')) return; e.preventDefault();
+  ptr = { id: e.pointerId, x0: e.clientX, y0: e.clientY, x: e.clientX, y: e.clientY, t: performance.now(), moves: 0 };
+  armHold(ptr, true); });
+function armHold(me, tap) { clearTimeout(holdT); holdT = setTimeout(() => { if (ptr === me && !me.turbo) { if (tap && !me.moves) tapGate(me.x0, me.y0); turbo(); me.held = me.turbo = true; } }, 350 / SNEL); }
 gameEl.addEventListener('pointermove', e => {
   if (!ptr || e.pointerId !== ptr.id) return;
   const dx = e.clientX - ptr.x, dy = e.clientY - ptr.y, need = ptr.moves ? 70 : 28;
-  if (Math.abs(dx) >= need && Math.abs(dx) > Math.abs(dy) * .8) { move(dx > 0 ? 1 : -1); ptr.moves++; ptr.x = e.clientX; ptr.y = e.clientY; }
+  if (Math.abs(dx) >= need && Math.abs(dx) > Math.abs(dy) * 1.2) { move(dx > 0 ? 1 : -1); ptr.moves++; ptr.x = e.clientX; ptr.y = e.clientY; armHold(ptr, false); }
   else if (!ptr.turbo && -dy >= 45 && -dy > Math.abs(dx) * 1.2) { turbo(); ptr.turbo = true; ptr.moves++; }
 });
 function endPtr(e, cancel) { if (!ptr || e.pointerId !== ptr.id) return; const moved = Math.hypot(e.clientX - ptr.x0, e.clientY - ptr.y0);
-  if (!cancel && !ptr.moves && moved < 24 && performance.now() - ptr.t < 600) {
+  clearTimeout(holdT);
+  if (!cancel && !ptr.moves && !ptr.held && moved < 24 && performance.now() - ptr.t < 350) {
     if (R && R.phase === 'run' && $('#tipCard').classList.contains('show') && (!R.row || R.row.resolved)) { $('#tipCard').classList.remove('show'); R.gap = Math.min(R.gap, .15); }
     else if (!tapGate(e.clientX, e.clientY)) move(e.clientX < window.innerWidth / 2 ? -1 : 1); }
   ptr = null; }
@@ -118,10 +122,12 @@ document.addEventListener('keydown', e => {
   else if (k === 's' || k === 'S') { useVoucher(); }
   else if (k === 'Escape' || k === 'p' || k === 'P') { R.paused ? resumeGame() : pauseGame(); }
   else if ((k === ' ' || k === 'Enter') && R.paused) { e.preventDefault(); resumeGame(); }
+  else if (k === ' ') { e.preventDefault(); turbo(); }
 });
 document.addEventListener('pointerdown', () => ac(), { once: true, capture: true });
 document.addEventListener('visibilitychange', () => { if (document.hidden) pauseGame(); });
 document.addEventListener('gesturestart', e => e.preventDefault());
+document.addEventListener('touchmove', e => { if ($('#game').classList.contains('on')) e.preventDefault(); }, { passive: false });
 document.addEventListener('dblclick', e => e.preventDefault());
 window.addEventListener('resize', () => { if ($('#game').classList.contains('on')) layout(); if (R) fitSum(); if (REST) layoutRest(); if (STORYRUN) layoutStory(); });
 

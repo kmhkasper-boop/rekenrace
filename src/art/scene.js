@@ -252,10 +252,13 @@ function burst(x, y, col, n, type) { for (let i = 0; i < n; i++) { const a = rnd
 function updateParticles(dt) { for (const p of parts) { p.t += dt; if (p.t < 0 || p.type === 'coin') continue; p.x += p.vx * dt; p.y += p.vy * dt; p.vy += 400 * dt; if (p.type === 'puff') { p.vx *= .9; p.vy = p.vy * .9 - 30 * dt; } } parts = parts.filter(p => p.t < p.dur); }
 
 /* beeld-uitleg zonder tekst: een hand wijst naar de goede poort en veegt erheen */
-function drawTutor() {
+function drawTutor() { // hand: eerst naar de goede baan, dan omhoog vegen
   if (!R || !R.tutor || R.done >= 3 || R.phase !== 'run') return; const r = R.row; if (!r || r.resolved) return;
-  const s = sc(r.z), g = gy(r.z), gx = CX + (r.cl - 1 - camX) * s, sP = F / ZP, px = CX + (player.x - camX) * sP;
-  const k = (TG * .8) % 1, e = k < .6 ? k / .6 : 1, x = px + (gx - px) * e, y = PY - LANE * .2 + (g - s * .2 - (PY - LANE * .2)) * e;
+  const s = sc(r.z), g = gy(r.z), sP = F / ZP, px = CX + (player.x - camX) * sP, tx = CX + (r.cl - 1 - camX) * sP, base = PY - LANE * .25;
+  const k = (TG * .6) % 1; let x, y;
+  if (player.lane !== r.cl) { const e = Math.min(1, k / .6); x = px + (tx - px) * e; y = base; }
+  else { const e = Math.min(1, k / .55); x = px; y = base - e * LANE * 1.1;
+    ctx.save(); ctx.globalAlpha = .85 * e; ctx.fillStyle = '#ffd23f'; ctx.font = `700 ${Math.max(30, LANE * .4)}px ${FONT}`; ctx.textAlign = 'center'; ctx.fillText('⬆️', x, base - LANE * 1.35); ctx.restore(); }
   ctx.save(); ctx.globalAlpha = k < .85 ? 1 : (1 - k) / .15; ctx.font = `${Math.max(34, LANE * .55)}px ${FONT}`; ctx.textAlign = 'center'; ctx.textBaseline = 'top';
-  ctx.fillStyle = 'rgba(255,255,255,.7)'; circ(ctx, gx, g - s * .85, s * .55 * (.8 + .2 * Math.sin(TG * 6))); ctx.globalAlpha *= 1; ctx.fillText('👆', x, y); ctx.restore();
+  ctx.fillStyle = 'rgba(255,255,255,.7)'; circ(ctx, CX + (r.cl - 1 - camX) * s, g - s * .85, s * .55 * (.8 + .2 * Math.sin(TG * 6))); ctx.fillText('👆', x, y); ctx.restore();
 }
