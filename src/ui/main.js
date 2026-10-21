@@ -39,6 +39,8 @@ document.addEventListener('click', e => {
   if (pid === 'segUnlock') { P.unlockAll = t.dataset.v === '1'; save(); renderOuders(); return; }
   if (pid === 'segPace') { P.pace = t.dataset.v; save(); renderOuders(); return; }
   if (pid === 'segCalm') { P.calm = t.dataset.v === '1'; save(); renderOuders(); return; }
+  if (pid === 'segWords') { P.words = t.dataset.v === '1'; P.wordsAsked = 1; save(); renderOuders(); return; }
+  if (pid === 'segStory') { P.showStory = t.dataset.v === '1'; save(); renderOuders(); return; }
   if (t.classList.contains('mutebtn') || t.id === 'btnMute2') { G.muted = !G.muted; save(); syncMute(); if (!G.muted) SFX.click(); return; }
 });
 const on = (id, f) => { $(id).onclick = f; };
@@ -49,7 +51,7 @@ on('#btnGarage', () => { SFX.click(); show('scrGarage'); });
 on('#btnKaart', () => { SFX.click(); show('scrKaart'); });
 on('#btnStickers', () => { SFX.click(); show('scrStickers'); });
 on('#btnSwitch', () => { SFX.click(); show('scrProfiles'); });
-on('#btnStory', () => { SFX.click(); playStory('intro', () => show('scrMenu')); });
+on('#btnStory', () => { SFX.click(); playStory('intro', () => show('scrMenu'), true); });
 on('#btnNewGo', createProfileFromForm);
 $('#newName').addEventListener('keydown', e => { if (e.key === 'Enter') createProfileFromForm(); });
 on('#btnLvGo', () => { const id = +$('#mdLevel').dataset.level, g = ($('#lvGhost button.on') || {}).dataset; $('#mdLevel').classList.remove('show'); SFX.click(); playLevel(id, g ? g.ghost : 'none'); });
@@ -65,6 +67,10 @@ on('#btnQuit', () => { const m = R && R.mode; SFX.click(); R = null; if (m === '
 on('#btnVoucher', () => { useVoucher(); });
 on('#calmGo', () => { turbo(); });
 on('#btnRestSkip', () => { endRest(); });
+$('#scrRest').addEventListener('click', e => { if (REST && (REST.type !== 'adem' || REST.t * SNEL >= 3)) endRest(); });
+const setWords = v => { P.words = v; P.wordsAsked = 1; save(); };
+on('#btnWordsOn', () => { setWords(true); $('#mdWords').classList.remove('show'); const f = wordsThen; wordsThen = null; f && f(); });
+on('#btnWordsOff', () => { setWords(false); $('#mdWords').classList.remove('show'); const f = wordsThen; wordsThen = null; f && f(); });
 on('#btnStoryNext', () => { SFX.page(); storyNext(); });
 on('#btnStorySkip', () => { storyEnd(); });
 on('#storyCv', () => { SFX.page(); storyNext(); });
@@ -91,7 +97,10 @@ gameEl.addEventListener('pointermove', e => {
   else if (!ptr.turbo && -dy >= 45 && -dy > Math.abs(dx) * 1.2) { turbo(); ptr.turbo = true; ptr.moves++; }
 });
 function endPtr(e, cancel) { if (!ptr || e.pointerId !== ptr.id) return; const moved = Math.hypot(e.clientX - ptr.x0, e.clientY - ptr.y0);
-  if (!cancel && !ptr.moves && moved < 24 && performance.now() - ptr.t < 600) move(e.clientX < window.innerWidth / 2 ? -1 : 1); ptr = null; }
+  if (!cancel && !ptr.moves && moved < 24 && performance.now() - ptr.t < 600) {
+    if (R && R.phase === 'run' && $('#tipCard').classList.contains('show') && (!R.row || R.row.resolved)) { $('#tipCard').classList.remove('show'); R.gap = Math.min(R.gap, .15); }
+    else if (!tapGate(e.clientX, e.clientY)) move(e.clientX < window.innerWidth / 2 ? -1 : 1); }
+  ptr = null; }
 gameEl.addEventListener('pointerup', e => endPtr(e, false));
 gameEl.addEventListener('pointercancel', e => endPtr(e, true));
 gameEl.addEventListener('contextmenu', e => e.preventDefault());
@@ -142,5 +151,5 @@ window.__rr = {
   SK, CAT, WORLDS, LEVELS, SEASONS, VEHICLES, STICKERS, STORY, MAKES, ASSET_FILES, player,
   parseKey, buildItem, makeOptions, pickKey, recordResult, startRide, playLevel, finishLevel, useVoucher, move, turbo, show, openLevel, openOuders,
   placeStart, placeAnswer, placeResult, applyPlacement, estimate, isOpen, nextLevel, setProfile, addProfile, migrateV1, loadG, endRest, storyEnd, storyNext,
-  reload() { G = loadG(); P = G.cur ? G.profiles[G.cur] : null; }, get curScreen() { return curScreen; },
+  reload() { G = loadG(); P = G.cur ? G.profiles[G.cur] : null; }, get curScreen() { return curScreen; }, qShow, youngItem, tapGate, commit, WORD_SKILLS,
 };

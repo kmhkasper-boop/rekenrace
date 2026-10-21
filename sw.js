@@ -1,5 +1,5 @@
 /* Rekenrace service worker – gegenereerd door tools/build.js. Alleen eigen bestanden, geen externe verzoeken. */
-const VERSION = 'v2-e109e836d4';
+const VERSION = 'v2-0b919f5372';
 const CACHE = 'rekenrace-' + VERSION;
 const FILES = [
  "./",

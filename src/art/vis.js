@@ -12,6 +12,17 @@ function drawVis(c, v, W, H) {
       c.fillStyle = 'rgba(255,255,255,.5)'; circ(c, x - r * .3, y - r * .3, r * .3);
       if (v.type === 'split' && i >= v.a) { c.fillStyle = '#8a93a6'; c.font = `700 ${r * 1.2}px ${FONT}`; c.textAlign = 'center'; c.textBaseline = 'middle'; c.fillText('?', x, y + r * .05); }
     }
+  } else if (v.type === 'line') { // getallenlijn: 7 8 ?  of  ? 8 9
+    const seq = v.dir > 0 ? [v.n - 1, v.n, '?'] : ['?', v.n, v.n + 1], bw = Math.min(W / 3.6, H * .9), gap = bw * .25, x0 = W / 2 - (bw * 3 + gap * 2) / 2;
+    seq.forEach((t, i) => { if (t !== '?' && t < 0) return; const x = x0 + i * (bw + gap), y = H / 2 - bw * .45; c.fillStyle = t === '?' ? '#ffd23f' : '#eef6ff'; rr(c, x, y, bw, bw * .9, bw * .2); c.fill();
+      c.fillStyle = '#1f2a44'; c.font = `700 ${bw * .55}px ${FONT}`; c.textAlign = 'center'; c.textBaseline = 'middle'; c.fillText(String(t), x + bw / 2, y + bw * .47);
+      if (i < 2) { c.fillStyle = '#4cc3ff'; tri(c, x + bw + gap * .2, y + bw * .3, x + bw + gap * .8, y + bw * .45, x + bw + gap * .2, y + bw * .6); } });
+  } else if (v.type === 'apples') { // 3 🍎 + 2 🍎  /  5 🍎 met 2 weggestreept
+    const plus = v.op === 'add', tot = plus ? v.a + v.b : v.a, cell = Math.min(W / (tot + (plus ? 2.2 : 1.2)), H * .8), r = cell * .38; let x = W / 2 - (tot + (plus ? 1 : 0)) * cell / 2 + cell / 2;
+    const apple = (x, y, cross) => { c.fillStyle = '#e8322f'; circ(c, x, y, r); c.fillStyle = 'rgba(255,255,255,.45)'; circ(c, x - r * .35, y - r * .3, r * .25); c.fillStyle = '#6b3a00'; c.fillRect(x - r * .06, y - r * 1.25, r * .12, r * .4); c.fillStyle = '#3ccf6e'; ell(c, x + r * .25, y - r * 1.05, r * .28, r * .14);
+      if (cross) { c.strokeStyle = '#1f2a44'; c.lineWidth = r * .22; c.lineCap = 'round'; c.beginPath(); c.moveTo(x - r, y - r); c.lineTo(x + r, y + r); c.moveTo(x + r, y - r); c.lineTo(x - r, y + r); c.stroke(); } };
+    for (let i = 0; i < tot; i++) { if (plus && i === v.a) { c.fillStyle = '#1f2a44'; c.font = `700 ${cell * .7}px ${FONT}`; c.textAlign = 'center'; c.textBaseline = 'middle'; c.fillText('+', x, H / 2); x += cell; }
+      apple(x, H / 2 + r * .2, !plus && i >= v.a - v.b); x += cell; }
   } else if (v.type === 'clock') {
     const r = m * .46, x = W / 2, y = H / 2;
     c.fillStyle = '#1f5fd1'; circ(c, x, y, r); c.fillStyle = '#fff'; circ(c, x, y, r * .9);
@@ -56,4 +67,11 @@ function drawMoney(c, cents, x, y, r) {
   c.strokeStyle = 'rgba(0,0,0,.25)'; c.lineWidth = 2; c.beginPath(); c.arc(x, y, rr2, 0, Math.PI * 2); c.stroke();
   c.fillStyle = '#1f2a44'; c.font = `700 ${rr2 * (big ? .7 : .6)}px ${FONT}`; c.textAlign = 'center'; c.textBaseline = 'middle';
   c.fillText(big ? '€' + cents / 100 : cents + 'ct', x, y + 1);
+}
+
+/* stippen-plaatje in een poort (dobbelsteen-achtig, max 10) */
+function drawDotPic(c, n, cx, cy, w, h, col) {
+  const per = n <= 5 ? n : Math.ceil(n / 2), rows = n <= 5 ? 1 : 2, cell = Math.min(w / per, h / rows) * .9, r = cell * .36;
+  for (let i = 0; i < n; i++) { const row = rows === 1 ? 0 : Math.floor(i / per), col2 = rows === 1 ? i : i % per, cnt = row === 0 ? Math.min(per, n) : n - per;
+    const x = cx - (cnt - 1) * cell / 2 + col2 * cell, y = cy - (rows - 1) * cell / 2 + row * cell; c.fillStyle = col || '#ff5a5f'; circ(c, x, y, r); }
 }

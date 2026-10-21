@@ -70,6 +70,7 @@
       <b>Kies je avatar</b><div class="pickgrid" id="avPick"></div>
       <b>Kies je kleur</b><div class="pickgrid" id="colPick"></div>
       <label class="check"><input type="checkbox" id="newCalm"> 🧘 Rustige modus (geen tijdsdruk)</label>
+      <label class="check"><input type="checkbox" id="newWords" checked> 📖 Verhaaltjessommen (later, vanaf groep 4)</label>
       <button class="btn big green" id="btnNewGo">✅ Klaar!</button>
     </div>
   </div>
@@ -169,7 +170,7 @@
       <div class="btnrow">
         <button class="btn big green" id="btnNext">➡️ Volgende level</button>
         <button class="btn" id="btnAgain">🔁 Nog een keer</button>
-        <button class="btn purple" data-go="scrMap">🗺️ Kaart</button>
+        <button class="btn purple" id="btnEndMap" data-go="scrMap">🗺️ Kaart</button>
       </div>
     </div>
   </div>
@@ -244,9 +245,18 @@
   <div id="storyTitle"></div>
   <button id="btnStorySkip">Overslaan ⏭</button>
   <div class="storyui">
-    <div id="bubble" class="bubble narr"><div id="bubbleWho"></div><div id="bubbleText"></div></div>
+    <div id="bubble" class="bubble narr"><div id="bubbleWho"></div><div id="bubblePic"></div><div id="bubbleText"></div></div>
     <div class="dots" id="storyDots"></div>
     <button class="btn green" id="btnStoryNext">Verder ▶</button>
+  </div>
+</div>
+
+<div id="mdWords" class="overlay dim">
+  <div class="card modalcard" style="max-width:460px">
+    <h2>📖 Verhaaltjessommen?</h2>
+    <p style="margin:0">In deze wereld komen sommen met een verhaaltje, zoals: <i>“Het kost € 1,20. Je betaalt € 5,00. Hoeveel krijg je terug?”</i> Wil je die, of liever de kale som (€ 5,00 − € 1,20)?</p>
+    <div class="btnrow"><button class="btn big green" id="btnWordsOn">📖 Met verhaaltjes</button><button class="btn big" id="btnWordsOff">🔢 Kale sommen</button></div>
+    <p class="small-note" style="margin:0">Later aan te passen bij 👪 Voor ouders.</p>
   </div>
 </div>
 
@@ -272,6 +282,10 @@
     <div><h3>📊 Overzicht</h3><p id="ouderStats"></p></div>
     <div><h3>🧘 Rustige modus</h3><p>Geen tijdsdruk: de poort wacht tot je kiest en op ‘Rijden’ tikt.</p>
       <div class="seg" id="segCalm" style="margin-top:6px"><button data-v="0">Uit</button><button data-v="1">Aan</button></div></div>
+    <div><h3>📖 Verhaaltjessommen</h3><p>Uit = dezelfde som, maar kaal (bijv. € 10,00 − € 6,40 in plaats van een winkelverhaal). Handig als lezen nog lastig is.</p>
+      <div class="seg" id="segWords" style="margin-top:6px"><button data-v="1">Aan</button><button data-v="0">Uit</button></div></div>
+    <div><h3>💬 Verhaal tonen</h3><p>De stripscènes tussen de werelden. Altijd met één tik over te slaan.</p>
+      <div class="seg" id="segStory" style="margin-top:6px"><button data-v="1">Aan</button><button data-v="0">Uit</button></div></div>
     <div><h3>🏎️ Tempo</h3><p>Het spel past de snelheid zelf aan. Hiermee zet je alles iets rustiger of pittiger.</p>
       <div class="seg" id="segPace" style="margin-top:6px"><button data-v="rustig">🐢 Rustig</button><button data-v="normaal">🙂 Normaal</button><button data-v="pittig">🐆 Pittig</button></div></div>
     <div><h3>🗺️ Levels</h3><p>Normaal gaan levels één voor één open. Hier kun je alles meteen openzetten.</p>

@@ -32,3 +32,10 @@ const STORY = {
     ['opa', 'pim', 'n', 'Alle vier de seizoenen zijn weer in orde. En Graaf Chaos? Die heet nu gewoon Graaf Gezellig. 🎉'] ] },
 };
 const CHAR_NAMES = { opa: 'Opa Tandwiel', pim: 'Pim de mol', chaos: 'Graaf Chaos', kikker: 'Kikkerkoning', victor: 'Vulkaan-Victor', uil: 'Uil Komma', player: '' };
+/* plaatjesversie voor groep 1-2 (geen lezen nodig) */
+const STORY_PICS = {
+  intro: ['👋 🔧 🏎️', '👋 🐹 👓', '🦹 💎💎💎💎 ➡️ 👜', '🌷☀️🍂❄️ ❓ ➡️ 🏎️💨', '🏎️💨 🏁 👍'],
+  w0: ['🐞🐞🐞 ❓', '☝️ 1 2 3 … 🙂'],
+  w1: ['🦆🦆 + 🦆🦆🦆 ❓', '✋ = ✌️ + 🤟 👍'],
+  b0: ['🐸 ➡️ 💎 🌷', '🎉 ➡️ ☀️ 😎'],
+};

@@ -27,8 +27,9 @@ function startRide(mode, levelId, ghostPref) {
     queue: [], recent: [], results: [], before: {}, phase: 'count', countN: 4, countT: 0, clock: 0, gap: .3,
     row: null, timeLeft: DUUR, reviewP: lv ? (lv.boss ? .4 : .3) : .45, paused: false, finishAt: null,
     lastCL: -1, sameRun: 0, bossHit: 0, bossNeed: lv ? Math.ceil(lv.len * .7) : 0, speedLvl: 0, lastSec: -1, marks: [],
-    ghost: lv ? chooseGhost(lv.id, ghostPref) : null, ghostState: null, bonusSeason: lv && lv.s === realSeason() };
+    ghost: lv ? chooseGhost(lv.id, ghostPref) : null, young: !!(lv && lv.w <= 1), tutor: !!(lv && lv.w <= 1 && (P.tutorN || 0) < 3), fastN: 0, ghostState: null, bonusSeason: lv && lv.s === realSeason() };
   R.speedLvl = speedLevel();
+  if (R.tutor) { P.tutorN = (P.tutorN || 0) + 1; }
   lastRide = { mode, levelId, ghostPref };
   if (lv) setTheme(lv.s, lv.w % 4); else setTheme(realSeason(), 0);
   dist = 0; decor = []; nextDecor = 2; parts = []; rows = []; player.x = 0; player.lane = 1; player.tilt = 0; player.hop = 0;
@@ -40,7 +41,7 @@ function startRide(mode, levelId, ghostPref) {
   $('#tipCard').classList.remove('show');
   $('#sumCard').className = ''; setSumText(lv ? `${WORLDS[lv.w].name} · ${lv.name}` : '1 minuut!'); showVis(null);
   show('game'); layout(); spawnDecor(dist + ZFAR);
-  $('#swipeHint').classList.toggle('show', (P.seenHint || 0) < 3);
+  $('#swipeHint').textContent = R.young ? '👈 👆 👉' : '👆 Veeg ← → of tik op een antwoord · ↑ turbo'; $('#swipeHint').classList.toggle('show', (P.seenHint || 0) < 3 && !R.tutor);
   updateHud();
 }
 function speedLevel() { return Math.floor((R.Tb[2] - R.T) / (R.Tb[2] - R.Tb[1]) * 4 + 1e-6); }
@@ -53,7 +54,7 @@ function countdownStep() {
     el.innerHTML = R.countN + (sub ? `<small>${esc(sub)}</small>` : ''); el.className = ''; el.style.display = 'block'; SFX.count();
   } else if (R.countN === 0) { el.innerHTML = 'Start! 🏁'; el.className = 'go'; SFX.go(); }
   else { el.style.display = 'none'; R.phase = 'run'; R.gap = .15; }
-  R.countT = .75 / SNEL;
+  R.countT = .55 / SNEL;
 }
 function setSumText(t) { const el = $('#sumText'); el.textContent = t; el.classList.toggle('long', t.length > 22); el.classList.toggle('mid', t.length <= 22 && /[a-zA-Zë]{4,}/.test(t)); fitSum(); }
 function fitSum() {
@@ -100,18 +101,18 @@ function spawnNext() {
   let pick = null, repeat = false;
   let qi = -1; R.queue.forEach((q, i) => { if (q.due <= R.done && (qi < 0 || q.due < R.queue[qi].due)) qi = i; });
   if (qi >= 0) { pick = R.queue[qi]; R.queue.splice(qi, 1); repeat = true; } else pick = pickKey(R.mix, R);
-  const it = buildItem(pick.k), opts = makeOptions(it);
+  const it0 = buildItem(pick.k), it = R.young ? youngItem(it0) : it0, opts = makeOptions(it);
   let cl = opts.indexOf(it.ans);
   if (cl === R.lastCL && R.sameRun >= 1) { const o = (cl + 1 + Math.floor(Math.random() * 2)) % 3; [opts[cl], opts[o]] = [opts[o], opts[cl]]; cl = o; }
   R.sameRun = cl === R.lastCL ? R.sameRun + 1 : 0; R.lastCL = cl;
   const golden = isHard(pick.k);
-  const row = { it, s: pick.s, opts, cl, z: ZS, age: 0, spawn: R.clock, lastMove: null, resolved: false, chosen: -1, ok: false, golden, repeat, waitT: 0 };
+  const row = { dots: R.young && !!it.dotGates, big: R.young, commitAt: null, it, s: pick.s, opts, cl, z: ZS, age: 0, spawn: R.clock, lastMove: null, resolved: false, chosen: -1, ok: false, golden, repeat, waitT: 0 };
   rows.push(row); R.row = row;
   R.recent.push(pick.k); if (R.recent.length > 6) R.recent.shift();
   if (!(pick.k in R.before)) R.before[pick.k] = boxOf(pick.k);
   $('#tipCard').classList.remove('show');
-  const card = $('#sumCard'); setSumText(it.q); showVis(it.vis);
-  card.className = (golden ? 'gold' : '') + (it.vis ? ' hasvis' : ''); void card.offsetWidth; card.classList.add('pop');
+  const card = $('#sumCard'), qq = qShow(it, R.young); setSumText(qq); showVis(it.vis);
+  card.className = (golden ? 'gold' : '') + (it.vis ? ' hasvis' : '') + (R.young && it.vis && !qq ? ' pic' : ''); void card.offsetWidth; card.classList.add('pop');
   $('#calmGo').classList.remove('show');
 }
 function resolve(row) {
@@ -126,7 +127,8 @@ function resolve(row) {
   if (row.ok) {
     R.correct++; R.streak++; R.best = Math.max(R.best, R.streak); P.bestStreak = Math.max(P.bestStreak, R.streak);
     R.marks.push(+(R.clock * SNEL).toFixed(2));
-    let coins = row.golden ? 4 : 2; const combo = R.streak % 5 === 0;
+    let coins = row.golden ? 4 : 2; const combo = R.streak % 5 === 0, quick = rt <= fast * .5;
+    if (quick) { coins += 1; R.fastN++; }
     if (combo) coins += 3; if (R.bonusSeason) coins += 1;
     P.coins += coins; R.coins += coins;
     if (R.mode === 'dag') R.score += 1 + (combo ? 2 : 0);
@@ -134,10 +136,10 @@ function resolve(row) {
     row.golden ? SFX.gold() : SFX.good(); SFX.coin();
     burstCoins(Math.min(6, coins), row.golden); burst(px, PY - LANE * .4, ['#ffd23f', '#5fd27d', '#4cc3ff', '#ff6fb5'], 14);
     if (combo) { comboT = 2.2 / SNEL; SFX.combo(); vibrate([15, 30, 15]); feedback(`COMBO TURBO! 🔥 ${R.streak} op rij`, true); }
-    else feedback((row.golden ? 'Goud! ⭐ ' : '') + pickOne(GOOD), row.golden);
-    $('#sumCard').className = 'ok' + (it.vis ? ' hasvis' : ''); setSumText(`${it.q.length > 22 ? '' : it.q + ' = '}${it.ans}`);
+    else feedback(quick ? (R.young ? '⚡👍' : 'Snel! ⚡ +1') : (row.golden ? 'Goud! ⭐ ' : '') + (R.young ? '👍' : pickOne(GOOD)), row.golden || quick);
+    $('#sumCard').className = 'ok' + (it.vis ? ' hasvis' : ''); { const qq = qShow(it, R.young); setSumText(`${!qq || qq.length > 22 ? '' : qq + ' = '}${it.ans}`); }
     const pill = $('#pillStreak'); pill.classList.remove('bump'); void pill.offsetWidth; pill.classList.add('bump');
-    R.T *= rt <= fast ? .94 : .985; R.gap = .8 / SNEL;
+    R.T *= rt <= fast ? .94 : .985; R.gap = .4 / SNEL;
   } else {
     R.streak = 0; bumpT = 1; shakeT = .35; player.hop = LANE * .12; comboT = 0;
     SFX.bad(); vibrate(70); burst(px, PY - 5, 'rgba(180,170,160,.8)', 8, 'puff');
@@ -148,12 +150,12 @@ function resolve(row) {
       if (remaining <= 0) { if (R.extra < 3) { R.total++; R.extra++; R.queue.push({ k: it.k, s: row.s, due: R.done }); } }
       else R.queue.push({ k: it.k, s: row.s, due: R.done + Math.min(3, remaining - 1) }); }
     else R.queue.push({ k: it.k, s: row.s, due: R.done + 3 });
-    $('#sumCard').className = 'bad' + (it.vis ? ' hasvis' : ''); setSumText(it.q);
+    const qq = qShow(it, R.young); $('#sumCard').className = 'bad' + (it.vis ? ' hasvis' : ''); setSumText(qq || '');
     $('#tipHead').textContent = `${pickOne(OOPS)} Jij koos ${row.opts[row.chosen]}.`;
-    $('#tipSum').textContent = it.q.length > 22 ? `Antwoord: ${it.ans}` : `${it.q} = ${it.ans}`;
-    $('#tipText').textContent = '💡 ' + it.tip;
+    $('#tipSum').textContent = R.young ? (it.dotGates || /^\d+$/.test(it.ans) && +it.ans <= 10 ? '●'.repeat(+it.ans) + '  ' + it.ans : it.ans) : qq.length > 22 ? `Antwoord: ${it.ans}` : `${qq} = ${it.ans}`;
+    $('#tipText').textContent = R.young ? '' : '💡 ' + it.tip; $('#tipCard').classList.toggle('young', R.young); if (R.young) $('#tipHead').textContent = '🙂 👉';
     $('#tipCard').classList.add('show');
-    R.gap = (R.mode === 'dag' ? 1.8 : 2.6) / SNEL * (it.tip.length > 70 ? 1.3 : 1);
+    R.gap = (R.young ? 1.6 : R.mode === 'dag' ? 1.5 : 2.2) / SNEL * (!R.young && it.tip.length > 70 ? 1.3 : 1);
   }
   R.T = clamp(R.T, R.Tb[1], R.Tb[2]);
   const lvl = speedLevel();
@@ -166,7 +168,7 @@ function checkFinish(ok) {
   if (R.mode === 'level' && R.done >= R.total) {
     if (R.queue.some(q => q.skip)) { R.total++; R.queue.forEach(q => { if (q.skip) q.due = Math.min(q.due, R.done); }); return; }
     if (R.queue.length && R.extra < 3) { R.total++; R.extra++; }
-    else R.finishAt = R.clock + (ok ? 1.2 : 2.6) / SNEL;
+    else R.finishAt = R.clock + (ok ? .6 : 1.8) / SNEL;
   }
 }
 /* 🎟️ sla deze som over: telt niet als fout, komt later in de rit terug */
@@ -200,9 +202,10 @@ function update(dt) {
   const vGate = (ZS - ZP) / effT() * SNEL;
   const row = R.row;
   if (row && !row.resolved) {
+    if (row.commitAt != null && !row.turbo && R.clock >= row.commitAt) commit(row);
     const hold = P.calm && !row.turbo && row.z <= ZP + 1.6;
     if (hold) { row.waitT += dt; if (!$('#calmGo').classList.contains('show')) $('#calmGo').classList.add('show'); }
-    else row.z -= vGate * (row.turbo ? 3.5 : 1) * dt;
+    else row.z -= (row.committed ? Math.max(vGate * 6, 14 * SNEL) : vGate * (row.turbo ? 3.5 : 1)) * dt;
     row.age += dt; if (row.z <= ZP) resolve(row);
   }
   else if (R.finishAt != null) { if (R.clock >= R.finishAt) { finishLevel(); return; } }
@@ -213,13 +216,30 @@ function update(dt) {
 function move(d) {
   if (!R || R.paused || R.phase === 'end') return;
   const nl2 = clamp(player.lane + d, 0, 2);
-  if (nl2 === player.lane) { player.tilt = d * .25; return; }
+  if (nl2 === player.lane) { player.tilt = d * .25; if (R.row && !R.row.resolved && R.phase === 'run') commit(R.row); return; }
   player.lane = nl2; SFX.lane();
-  if (R.row && !R.row.resolved) R.row.lastMove = R.clock - R.row.spawn - R.row.waitT;
+  if (R.row && !R.row.resolved) { R.row.lastMove = R.clock - R.row.spawn - R.row.waitT; if (R.phase === 'run') R.row.commitAt = R.clock + .28 / SNEL; }
   if ($('#swipeHint').classList.contains('show') && R.phase === 'run') $('#swipeHint').classList.remove('show');
 }
 function turbo() {
   if (!R || R.paused || R.phase !== 'run') return;
   const r = R.row; if (!r || r.resolved || r.turbo) return;
   r.turbo = true; r.turboAt = R.clock - r.spawn - r.waitT; boostT = .6; SFX.speed(); $('#calmGo').classList.remove('show');
+}
+
+/* vroeg kiezen: de auto versnelt meteen naar de poort */
+function commit(row) {
+  if (!row || row.resolved || row.turbo) return;
+  row.turbo = true; row.committed = true; row.turboAt = R.clock - row.spawn - row.waitT; boostT = .7; R.versnelT = .6; R.commits = (R.commits || 0) + 1;
+  if (R.commits <= 2) toast(R.young ? '⚡🚀' : '⚡ Versnellen!'); SFX.speed(); $('#calmGo').classList.remove('show');
+}
+/* tik op een antwoordpoort: stuur erheen en versnel */
+function tapGate(cx, cy) {
+  if (!R || R.paused || R.phase !== 'run') return false; const r = R.row; if (!r || r.resolved) return false;
+  const s = sc(r.z), g = gy(r.z), top = g - s * 1.6;
+  if (cy < top - 10 || cy > g + 10) return false;
+  let best = -1, bd = 1e9; for (let i = 0; i < 3; i++) { const x = CX + (i - 1 - camX) * s, d = Math.abs(cx - x); if (d < bd) { bd = d; best = i; } }
+  if (bd > s * .6) return false;
+  const d = best - player.lane; if (d) { player.lane = best; SFX.lane(); r.lastMove = R.clock - r.spawn - r.waitT; }
+  commit(r); return true;
 }

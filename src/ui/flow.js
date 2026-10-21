@@ -54,6 +54,7 @@ function renderEnd(info) {
   $('#endBanners').innerHTML = b;
   const last = info.id === NLEV - 1 && info.cleared;
   $('#btnNext').textContent = last ? '🎉 Het einde van het verhaal' : info.cleared ? '➡️ Volgende level' : '🔁 Nog een poging';
+  $('#btnNext').dataset.yi = ''; if (LEVELS[info.id].w <= 1) { $('#endMsg').textContent = `✅ ${R.correct}   ❌ ${R.done - R.correct}`; $('#endWorld').textContent = SEASONS[LEVELS[info.id].s].icon + ' ' + WORLDS[LEVELS[info.id].w].icon + ' ' + (LEVELS[info.id].l + 1); }
 }
 function goNext() {
   const info = lastEnd; if (!info) return;
@@ -65,9 +66,11 @@ function goNext() {
   });
 }
 function defaultGhost(id) { return P.lv[id] && P.lv[id].ghost && P.lv[id].plays ? 'self' : 'none'; }
+let wordsThen = null;
 function playLevel(id, ghostPref) {
   const w = LEVELS[id].w, key = 'w' + w;
-  const go = () => startRide('level', id, ghostPref == null ? defaultGhost(id) : ghostPref);
+  const go0 = () => startRide('level', id, ghostPref == null ? defaultGhost(id) : ghostPref);
+  const go = () => { if (!P.wordsAsked && WORLDS[w].sk.flat().some(x => WORD_SKILLS.includes(x))) { wordsThen = go0; $('#mdWords').classList.add('show'); } else go0(); };
   if (!P.story.intro) playStory('intro', () => playStory(key, go));
   else if (!P.story[key]) playStory(key, go); else go();
 }
@@ -79,8 +82,8 @@ function runRest(done) {
   const breathe = P.restN % 3 === 0;
   const lv = lastEnd ? LEVELS[lastEnd.id] : LEVELS[0];
   const type = breathe ? 'adem' : pickOne(REST_BY_SEASON[lv.s]);
-  REST = { type, t: 0, dur: (breathe ? 10 : 6.5) / SNEL, done, s: lv.s };
-  $('#restText').textContent = breathe ? 'Even rust. Adem mee met het rondje…' : REST_TXT[type];
+  REST = { type, t: 0, dur: (breathe ? 10 : 5) / SNEL, done, s: lv.s };
+  $('#restText').textContent = youngNow() ? (breathe ? '🫧 😌' : '☕ 🙂') : (breathe ? 'Even rust. Adem mee met het rondje…' : REST_TXT[type]) + (breathe ? '' : ' (tik om verder te gaan)');
   $('#restTitle').textContent = breathe ? '🫧 Adempauze' : '☕ Rustmoment';
   show('scrRest'); layoutRest();
 }
@@ -89,6 +92,7 @@ function endRest() { if (!REST) return; const d = REST.done; REST = null; d && d
 function drawRest(dt) {
   if (!REST) return; REST.t += dt; const cn = $('#restCv'), c = cn.getContext('2d'), w = REST.w, h = REST.h, t = REST.t * SNEL, k = REST.t / REST.dur;
   $('#restBar').style.width = Math.min(100, k * 100) + '%';
+  $('#btnRestSkip').style.visibility = REST.type !== 'adem' || t >= 3 ? 'visible' : 'hidden';
   c.setTransform(REST.d, 0, 0, REST.d, 0, 0); c.clearRect(0, 0, w, h);
   const th = THEMES[REST.s][0], g = c.createLinearGradient(0, 0, 0, h); g.addColorStop(0, th.sky[0]); g.addColorStop(.65, th.sky[1]); g.addColorStop(.651, th.grass[0]); g.addColorStop(1, th.grass[1]);
   c.fillStyle = g; c.fillRect(0, 0, w, h);
@@ -120,8 +124,8 @@ function drawDecorAt(c, type, x, y, s) { c.fillStyle = '#7a4a2a'; c.fillRect(x -
 
 /* ---------- verhaal (stripplaatjes met tekstballonnen) ---------- */
 let STORYRUN = null;
-function playStory(key, done) {
-  const st = STORY[key]; if (!st) { done && done(); return; }
+function playStory(key, done, force) {
+  const st = STORY[key]; if (!st || (P.showStory === false && !force)) { done && done(); return; }
   STORYRUN = { key, i: 0, done, t: 0 }; $('#storyTitle').textContent = '📖 ' + st.title; show('scrStory'); layoutStory(); renderStoryPanel();
 }
 function layoutStory() { const cn = $('#storyCv'), d = Math.min(2, devicePixelRatio || 1), r = cn.getBoundingClientRect(); cn.width = Math.round(r.width * d); cn.height = Math.round(r.height * d); if (STORYRUN) Object.assign(STORYRUN, { d, w: r.width, h: r.height }); }
@@ -133,6 +137,8 @@ function renderStoryPanel() {
   $('#bubbleWho').textContent = name; $('#bubbleText').textContent = p[3].replace(/\{naam\}/g, P.name);
   $('#storyDots').innerHTML = st.p.map((_, i) => `<i class="${i === STORYRUN.i ? 'on' : ''}"></i>`).join('');
   $('#btnStoryNext').textContent = STORYRUN.i < st.p.length - 1 ? 'Verder ▶' : 'Racen! 🏁';
+  const yp = youngNow() && STORY_PICS[STORYRUN.key]; $('#bubble').classList.toggle('pics', !!yp); $('#bubblePic').textContent = yp ? yp[STORYRUN.i] || '' : '';
+  applyYoung();
   SFX.page();
 }
 function storyNext() { const st = STORY[STORYRUN.key]; if (STORYRUN.i < st.p.length - 1) { STORYRUN.i++; renderStoryPanel(); } else storyEnd(); }

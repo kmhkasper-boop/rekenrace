@@ -120,9 +120,9 @@ const fval = s => { const [n, d] = s.split('/').map(Number); return n / d; };
 
 /* ---------- MAKES ---------- */
 const MAKES = {
-  tel(n) { return { q: 'Hoeveel stippen?', a: n, vis: { type: 'dots', n }, w: [[n + 1, 3], [n - 1, 3], [n + 2, 1], [n - 2, 1]].filter(x => x[0] > 0), tip: n > 5 ? `Tel in groepjes van 5: 5 en nog ${n - 5} is ${n}` : `Tel ze één voor één, wijs ze aan: ${n}`, fast: 4.5 }; },
-  na(n, dir) { return { q: dir > 0 ? `Welk getal komt na ${n}?` : `Welk getal komt vóór ${n}?`, a: n + dir, w: [[n, 2], [n - dir, 3], [n + 2 * dir, 1]].filter(x => x[0] >= 0), tip: dir > 0 ? `Tel verder: ${n}, ${n + 1}` : `Tel terug: ${n}, ${n - 1}`, fast: 4 }; },
-  meer(a, b, c) { const ans = Math.max(a, b, c); return { q: 'Welk getal is het grootst?', a: ans, opts: [a, b, c].map(String), tip: `${ans} is het grootst: die komt het laatst als je telt.`, fast: 4 }; },
+  tel(n) { return { q: 'Hoeveel stippen?', a: n, vis: { type: 'dots', n }, w: [[n + 1, 3], [n - 1, 3], [n + 2, 1], [n - 2, 1]].filter(x => x[0] > 0), pq: '', dotGates: n <= 10, tip: n > 5 ? `Tel in groepjes van 5: 5 en nog ${n - 5} is ${n}` : `Tel ze één voor één, wijs ze aan: ${n}`, fast: 4.5 }; },
+  na(n, dir) { return { q: dir > 0 ? `Welk getal komt na ${n}?` : `Welk getal komt vóór ${n}?`, a: n + dir, pq: '', vis: { type: 'line', n, dir }, w: [[n, 2], [n - dir, 3], [n + 2 * dir, 1]].filter(x => x[0] >= 0), tip: dir > 0 ? `Tel verder: ${n}, ${n + 1}` : `Tel terug: ${n}, ${n - 1}`, fast: 4 }; },
+  meer(a, b, c) { const ans = Math.max(a, b, c); return { q: 'Welk getal is het grootst?', a: ans, pq: '👑 ?', dotGates: ans <= 10, opts: [a, b, c].map(String), tip: `${ans} is het grootst: die komt het laatst als je telt.`, fast: 4 }; },
   splits(n, a) { const ans = n - a; return { q: `${n} = ${a} + ?`, a: ans, vis: { type: 'split', n, a }, w: [[ans + 1, 3], [ans - 1, 3], [a, 1.2], [n, .5]].filter(x => x[0] >= 0), tip: `${a} en ${ans} maken samen ${n}. Tel verder vanaf ${a} tot ${n}.`, fast: 4 }; },
   add(a, b) { const ans = a + b; return { q: `${nl(a)} + ${nl(b)}`, a: ans, w: addSubWrong(a, b, '+', ans), tip: addSubTip(a, b, '+', ans), fast: ans > 100 ? 6 : ans > 20 ? 4.5 : 3.5 }; },
   sub(a, b) { const ans = a - b; return { q: `${nl(a)} − ${nl(b)}`, a: ans, w: addSubWrong(a, b, '-', ans), tip: addSubTip(a, b, '-', ans), fast: a > 100 ? 6 : a > 20 ? 4.5 : 3.5 }; },
@@ -141,7 +141,7 @@ const MAKES = {
     const e = h * 60 + m + mins, h2 = Math.floor(e / 60), m2 = e % 60;
     const naive = (h2 * 100 + m2) - (h * 100 + m);
     const C = [[mins + 5, 2], [mins - 5, 2], [mins + 10, 1.5], [mins - 10, 1.5], [naive, naive !== mins ? 3 : 0], [mins + 60, .8]];
-    return { q: `Van ${hhmm(h, m)} tot ${hhmm(h2, m2)}. Hoeveel minuten?`, a: mins, f: v => `${v} min`, w: C.filter(x => x[0] > 0 && x[1] > 0),
+    return { q: `Van ${hhmm(h, m)} tot ${hhmm(h2, m2)}. Hoeveel minuten?`, bare: `${hhmm(h, m)} → ${hhmm(h2, m2)} = ? min`, a: mins, f: v => `${v} min`, w: C.filter(x => x[0] > 0 && x[1] > 0),
       tip: mins > 60 - m ? `Spring eerst naar het hele uur: ${hhmm(h, m)} → ${hhmm(h + 1, 0)} is ${60 - m} min, dan nog ${mins - (60 - m)} min. Samen ${mins} min.` : `Tel de minuten van ${hhmm(h, m)} verder: samen ${mins} min.`, fast: 8, tf: 1.5 };
   },
   geld(list) { const it = String(list).split('_').map(Number), s = it.reduce((x, y) => x + y, 0);
@@ -150,7 +150,7 @@ const MAKES = {
       tip: `Begin bij het grootste: ${it.slice().sort((x, y) => y - x).map(eurShort).join(' + ')} = ${eur(s)}`, fast: 6, tf: 1.2 }; },
   terug(price, paid) { const t = paid - price;
     const C = [[t + 10, 2], [t - 10, 2], [t + 100, 2], [t - 100, t > 100 ? 2 : 0], [price, price !== t ? .8 : 0], [t + 50, 1]];
-    return { q: `Het kost ${eur(price)}. Je betaalt ${eur(paid)}. Hoeveel krijg je terug?`, a: t, f: eur, w: C.filter(x => x[0] > 0 && x[1] > 0),
+    return { q: `Het kost ${eur(price)}. Je betaalt ${eur(paid)}. Hoeveel krijg je terug?`, bare: `${eur(paid)} − ${eur(price)}`, a: t, f: eur, w: C.filter(x => x[0] > 0 && x[1] > 0),
       tip: `Tel op vanaf ${eur(price)} tot ${eur(paid)}: dat is ${eur(t)}`, fast: 8, tf: 1.5 }; },
   eur(a, b, op) { const ans = op === '+' ? a + b : a - b;
     const C = [[ans + 10, 2], [ans - 10, 2], [ans + 100, 2], [ans - 100, ans > 100 ? 2 : 0], [ans + 5, .6]];
@@ -222,21 +222,21 @@ const MAKES = {
   vh(kind, a, b, c) {
     if (kind === 0) { // a stuks kosten a*b euro, wat kosten c stuks
       const ans = c * b * 100; const C = [[c * a * 100, c * a !== c * b ? 1 : 0], [(c * b + b) * 100, 2], [(c * b - b) * 100, c > 1 ? 2 : 0], [(a * b + c) * 100, 1], [(a * b * c) * 100, 1]];
-      return { q: `${a} ijsjes kosten ${eur(a * b * 100)}. Wat kosten ${c} ijsjes?`, a: ans, f: eur, w: C.filter(x => x[1] > 0 && x[0] > 0 && x[0] !== ans), tip: `Eerst 1 ijsje: ${eur(a * b * 100)} : ${a} = ${eur(b * 100)}. Dan ${c} × ${eur(b * 100)} = ${eur(ans)}`, fast: 9, tf: 1.6 };
+      return { q: `${a} ijsjes kosten ${eur(a * b * 100)}. Wat kosten ${c} ijsjes?`, bare: `${eur(a * b * 100)} : ${a} × ${c}`, a: ans, f: eur, w: C.filter(x => x[1] > 0 && x[0] > 0 && x[0] !== ans), tip: `Eerst 1 ijsje: ${eur(a * b * 100)} : ${a} = ${eur(b * 100)}. Dan ${c} × ${eur(b * 100)} = ${eur(ans)}`, fast: 9, tf: 1.6 };
     }
     // recept: voor a pannenkoeken b eieren, voor c pannenkoeken?
     const ans = b * c / a; const C = [[ans + 1, 2], [ans - 1, ans > 1 ? 2 : 0], [b + (c - a), 2.5], [ans * 2, 1], [c / b, Number.isInteger(c / b) ? 1 : 0]];
-    return { q: `Voor ${a} pannenkoeken heb je ${b} eieren nodig. Hoeveel eieren voor ${c} pannenkoeken?`, a: ans, w: C.filter(x => x[1] > 0 && x[0] > 0 && x[0] !== ans && Number.isInteger(x[0])), tip: `Maak een verhoudingstabel: ${a} → ${b}. ${c} is ${nl(c / a)} keer zoveel, dus ${b} × ${nl(c / a)} = ${ans} eieren`, fast: 9, tf: 1.7 };
+    return { q: `Voor ${a} pannenkoeken heb je ${b} eieren nodig. Hoeveel eieren voor ${c} pannenkoeken?`, bare: `${a} → ${b}   ${c} → ?`, a: ans, w: C.filter(x => x[1] > 0 && x[0] > 0 && x[0] !== ans && Number.isInteger(x[0])), tip: `Maak een verhoudingstabel: ${a} → ${b}. ${c} is ${nl(c / a)} keer zoveel, dus ${b} × ${nl(c / a)} = ${ans} eieren`, fast: 9, tf: 1.7 };
   },
   pk(c, g) { const ans = c * g / 1000;
     const C = [[ans * 10, 1.5], [ans / 2, 1.5], [ans * 2, 1.5], [ans + 100, 1], [ans - 100, ans > 100 ? 1 : 0], [c - ans, 1]];
-    return { q: `1 kg kaas kost ${eur(c)}. Wat kost ${g} gram?`, a: ans, f: eur, w: C.filter(x => x[1] > 0 && x[0] > 0 && Number.isInteger(x[0]) && x[0] !== ans), tip: `1 kg = 1000 g. ${g} g is ${fr(g / gcd(g, 1000), 1000 / gcd(g, 1000))} kg. ${eur(c)} : ${1000 / gcd(g, 1000)} × ${g / gcd(g, 1000)} = ${eur(ans)}`, fast: 9, tf: 1.6 };
+    return { q: `1 kg kaas kost ${eur(c)}. Wat kost ${g} gram?`, bare: `1 kg = ${eur(c)}   ${g} g = ?`, a: ans, f: eur, w: C.filter(x => x[1] > 0 && x[0] > 0 && Number.isInteger(x[0]) && x[0] !== ans), tip: `1 kg = 1000 g. ${g} g is ${fr(g / gcd(g, 1000), 1000 / gcd(g, 1000))} kg. ${eur(c)} : ${1000 / gcd(g, 1000)} × ${g / gcd(g, 1000)} = ${eur(ans)}`, fast: 9, tf: 1.6 };
   },
   schaal(s, cm) { const realCm = s * cm; let ans, u;
     if (realCm >= 100000) { ans = realCm / 100000; u = 'km'; } else { ans = realCm / 100; u = 'm'; }
     const f = v => `${nl(v)} ${u}`;
     const C = [[ans * 10, 3], [ans / 10, 3], [ans * 100, 1], [cm, cm !== ans ? 1 : 0]];
-    return { q: `Schaal 1 : ${nl(s)}. Op de kaart is het ${cm} cm. Hoeveel is dat echt?`, a: ans, f, w: C.filter(x => x[1] > 0 && x[0] >= .01 && x[0] !== ans), tip: `1 cm op de kaart is ${nl(s)} cm echt. ${cm} × ${nl(s)} = ${nl(realCm)} cm = ${f(ans)}`, fast: 9, tf: 1.6 };
+    return { q: `Schaal 1 : ${nl(s)}. Op de kaart is het ${cm} cm. Hoeveel is dat echt?`, bare: `1 : ${nl(s)}   ${cm} cm = ? ${u}`, a: ans, f, w: C.filter(x => x[1] > 0 && x[0] >= .01 && x[0] !== ans), tip: `1 cm op de kaart is ${nl(s)} cm echt. ${cm} × ${nl(s)} = ${nl(realCm)} cm = ${f(ans)}`, fast: 9, tf: 1.6 };
   },
   vo(a, o1, b, o2, c, par) {
     const ap = (x, o, y) => o === '+' ? x + y : o === '-' ? x - y : o === 'x' ? x * y : x / y;
@@ -252,7 +252,7 @@ const MAKES = {
   },
   gem(list) { const it = String(list).split('_').map(Number), s = it.reduce((x, y) => x + y, 0), ans = s / it.length;
     const C = [[s, 2], [ans + 1, 2], [ans - 1, 2], [Math.max(...it), 1], [s / (it.length + 1), Number.isInteger(s / (it.length + 1)) ? 1 : 0]];
-    return { q: `Wat is het gemiddelde van ${it.slice(0, -1).join(', ')} en ${it[it.length - 1]}?`, a: ans, w: C.filter(x => x[1] > 0 && x[0] > 0 && Number.isInteger(x[0]) && x[0] !== ans), tip: `Tel alles op: ${s}. Deel door het aantal (${it.length}): ${s} : ${it.length} = ${ans}`, fast: 8, tf: 1.4 };
+    return { q: `Wat is het gemiddelde van ${it.slice(0, -1).join(', ')} en ${it[it.length - 1]}?`, bare: `(${it.join(' + ')}) : ${it.length}`, a: ans, w: C.filter(x => x[1] > 0 && x[0] > 0 && Number.isInteger(x[0]) && x[0] !== ans), tip: `Tel alles op: ${s}. Deel door het aantal (${it.length}): ${s} : ${it.length} = ${ans}`, fast: 8, tf: 1.4 };
   },
   ctx(t, a, b) { return CTX[t](a, b); },
 };
@@ -274,12 +274,12 @@ function clockItem(h, m, digital) {
 }
 /* contextsommen (finale): t = sjabloon */
 const CTX = [
-  (a, b) => ({ q: `In de bus zijn ${a} plekken. Er zitten ${b} mensen in. Hoeveel plekken zijn er nog vrij?`, a: a - b, w: [[a - b + 10, 2], [a - b - 10, 2], [a + b, 1], [a - b + 1, 1]], tip: `Vrij = ${a} − ${b} = ${a - b}`, fast: 9, tf: 1.6 }),
-  (a, b) => ({ q: `Er zijn ${a} dozen met elk ${b} eieren. Hoeveel eieren zijn dat samen?`, a: a * b, w: [[a * b + b, 2], [a * b - b, 2], [a + b, 1], [a * b + 10, 1]], tip: `${a} × ${b}: splits ${b} in ${b - b % 10} en ${b % 10}: ${a} × ${b - b % 10} + ${a} × ${b % 10} = ${a * b}`, fast: 10, tf: 1.7 }),
-  (a, b) => ({ q: `Je verdeelt ${eur(a * b * 100)} eerlijk over ${b} kinderen. Hoeveel krijgt ieder?`, a: a * 100, f: eur, w: [[a * 100 + 100, 2], [a * 100 - 100, 2], [a * b * 100 - b * 100, 1], [a * 50, 1]], tip: `${eur(a * b * 100)} : ${b} = ${eur(a * 100)}`, fast: 9, tf: 1.6 }),
-  (a, b) => ({ q: `Een trui kost ${eur(a * 100)}. Je krijgt ${b}% korting. Wat betaal je?`, a: a * (100 - b), f: eur, w: [[a * b, 3], [a * (100 - b) + 100 * a / 10, 1.5], [(a - b) * 100, a > b ? 2 : 0], [a * (100 - b) - 100 * a / 10, 1]], tip: `${b}% van ${eur(a * 100)} = ${eur(a * b)}. Je betaalt ${eur(a * 100)} − ${eur(a * b)} = ${eur(a * (100 - b))}`, fast: 10, tf: 1.8 }),
-  (a, b) => ({ q: `Je fietst ${a} km per uur. Hoe ver kom je in ${nl(b / 2)} uur?`, a: a * b / 2, f: v => `${nl(v)} km`, w: [[a * Math.floor(b / 2), b % 2 ? 2 : 0], [a + b / 2, 1.5], [a * b, 2], [a * b / 2 + a, 1]], tip: `${a} km per uur. ${nl(b / 2)} uur: ${a} × ${nl(b / 2)} = ${nl(a * b / 2)} km`, fast: 10, tf: 1.8 }),
-  (a, b) => { const h = 18 + Math.floor(a / 60), m = a % 60, e = h * 60 + m + b; return { q: `De film begint om ${hhmm(h, m)} en duurt ${b} minuten. Hoe laat is hij klaar?`, a: hhmm(Math.floor(e / 60), e % 60), w: [[hhmm(h + 1, (m + b) % 100 % 60), 1], [hhmm(Math.floor((e + 60) / 60), e % 60), 2], [hhmm(Math.floor((e - 60) / 60), e % 60), 1.5], [hhmm(Math.floor((e + 10) / 60), (e + 10) % 60), 1.5], [hhmm(Math.floor((e - 10) / 60), (e - 10) % 60), 1.5]], tip: `${b} min = ${Math.floor(b / 60)} uur en ${b % 60} min. ${hhmm(h, m)} + ${Math.floor(b / 60)} uur = ${hhmm(h + Math.floor(b / 60), m)}, plus ${b % 60} min = ${hhmm(Math.floor(e / 60), e % 60)}`, fast: 12, tf: 1.9 }; },
+  (a, b) => ({ q: `In de bus zijn ${a} plekken. Er zitten ${b} mensen in. Hoeveel plekken zijn er nog vrij?`, bare: `${a} − ${b}`, a: a - b, w: [[a - b + 10, 2], [a - b - 10, 2], [a + b, 1], [a - b + 1, 1]], tip: `Vrij = ${a} − ${b} = ${a - b}`, fast: 9, tf: 1.6 }),
+  (a, b) => ({ q: `Er zijn ${a} dozen met elk ${b} eieren. Hoeveel eieren zijn dat samen?`, bare: `${a} × ${b}`, a: a * b, w: [[a * b + b, 2], [a * b - b, 2], [a + b, 1], [a * b + 10, 1]], tip: `${a} × ${b}: splits ${b} in ${b - b % 10} en ${b % 10}: ${a} × ${b - b % 10} + ${a} × ${b % 10} = ${a * b}`, fast: 10, tf: 1.7 }),
+  (a, b) => ({ q: `Je verdeelt ${eur(a * b * 100)} eerlijk over ${b} kinderen. Hoeveel krijgt ieder?`, bare: `${eur(a * b * 100)} : ${b}`, a: a * 100, f: eur, w: [[a * 100 + 100, 2], [a * 100 - 100, 2], [a * b * 100 - b * 100, 1], [a * 50, 1]], tip: `${eur(a * b * 100)} : ${b} = ${eur(a * 100)}`, fast: 9, tf: 1.6 }),
+  (a, b) => ({ q: `Een trui kost ${eur(a * 100)}. Je krijgt ${b}% korting. Wat betaal je?`, bare: `${eur(a * 100)} − ${b}%`, a: a * (100 - b), f: eur, w: [[a * b, 3], [a * (100 - b) + 100 * a / 10, 1.5], [(a - b) * 100, a > b ? 2 : 0], [a * (100 - b) - 100 * a / 10, 1]], tip: `${b}% van ${eur(a * 100)} = ${eur(a * b)}. Je betaalt ${eur(a * 100)} − ${eur(a * b)} = ${eur(a * (100 - b))}`, fast: 10, tf: 1.8 }),
+  (a, b) => ({ q: `Je fietst ${a} km per uur. Hoe ver kom je in ${nl(b / 2)} uur?`, bare: `${a} km × ${nl(b / 2)}`, a: a * b / 2, f: v => `${nl(v)} km`, w: [[a * Math.floor(b / 2), b % 2 ? 2 : 0], [a + b / 2, 1.5], [a * b, 2], [a * b / 2 + a, 1]], tip: `${a} km per uur. ${nl(b / 2)} uur: ${a} × ${nl(b / 2)} = ${nl(a * b / 2)} km`, fast: 10, tf: 1.8 }),
+  (a, b) => { const h = 18 + Math.floor(a / 60), m = a % 60, e = h * 60 + m + b; return { q: `De film begint om ${hhmm(h, m)} en duurt ${b} minuten. Hoe laat is hij klaar?`, bare: `${hhmm(h, m)} + ${b} min`, a: hhmm(Math.floor(e / 60), e % 60), w: [[hhmm(h + 1, (m + b) % 100 % 60), 1], [hhmm(Math.floor((e + 60) / 60), e % 60), 2], [hhmm(Math.floor((e - 60) / 60), e % 60), 1.5], [hhmm(Math.floor((e + 10) / 60), (e + 10) % 60), 1.5], [hhmm(Math.floor((e - 10) / 60), (e - 10) % 60), 1.5]], tip: `${b} min = ${Math.floor(b / 60)} uur en ${b % 60} min. ${hhmm(h, m)} + ${Math.floor(b / 60)} uur = ${hhmm(h + Math.floor(b / 60), m)}, plus ${b % 60} min = ${hhmm(Math.floor(e / 60), e % 60)}`, fast: 12, tf: 1.9 }; },
 ];
 /* ---------- opbouwen ---------- */
 function parseKey(k) { const p = k.split(':'); return { make: p[0], ps: p.slice(1).map(x => /^-?\d+(\.\d+)?$/.test(x) ? +x : x) }; }
@@ -310,4 +310,12 @@ function makeOptions(it) {
   }
   for (let k = 1; out.length < 2; k++) { const s = it.ans + ' ' + '?'.repeat(k); if (!seen.has(s)) { seen.add(s); out.push(s); } } // noodgreep (komt niet voor in tests)
   return shuffle([it.ans, out[0], out[1]]);
+}
+
+/* tonen: kale som als verhaaltjessommen uit staan; plaatjes (pq) voor groep 1-2 */
+const WORD_SKILLS = ['terug', 'verh', 'prijskilo', 'schaal', 'tijdsduur', 'gemiddelde', 'context'];
+function qShow(it, young) { if (P && P.words === false && it.bare) return it.bare; if (young && it.pq != null) return it.pq; return it.q; }
+function youngItem(it) { // appels-plaatje bij plus/min tot 10
+  if ((it.make === 'add' || it.make === 'sub') && !it.vis) { const [a, b] = parseKey(it.k).ps; if (Math.max(a, b, it.a) <= 10) return Object.assign({}, it, { vis: { type: 'apples', a, b, op: it.make }, pq: '', dotGates: false }); }
+  return it;
 }

@@ -6,7 +6,7 @@ function show(id) {
   $('#game').classList.toggle('on', id === 'game');
   if (id !== 'game') { $('#mdPause').classList.remove('show'); if (R && R.phase !== 'end') R = null; }
   document.body.dataset.season = (id === 'scrMap' ? mapSeason : realSeason());
-  const fn = RENDER[id]; if (fn) fn();
+  const fn = RENDER[id]; if (fn) fn(); applyYoung();
   const el = $('#' + id); if (el && el.scrollTo) el.scrollTop = 0;
 }
 const coinsTxt = () => $$('.coinTxt').forEach(e => e.textContent = P ? P.coins : 0);
@@ -47,7 +47,7 @@ function renderNewPick() {
 }
 function createProfileFromForm() {
   const name = ($('#newName').value || '').trim().slice(0, 14); if (!name) { $('#newName').focus(); $('#newName').classList.add('shake'); setTimeout(() => $('#newName').classList.remove('shake'), 400); return; }
-  addProfile(name, newDraft.av, newDraft.avc); P.calm = $('#newCalm').checked; save(); show('scrPlace');
+  addProfile(name, newDraft.av, newDraft.avc); P.calm = $('#newCalm').checked; P.words = $('#newWords').checked; P.wordsAsked = 1; save(); show('scrPlace');
 }
 
 /* ---------- kaart met seizoenen ---------- */
@@ -172,6 +172,8 @@ function renderOuders() {
   $$('#segUnlock button').forEach(b => b.classList.toggle('on', (b.dataset.v === '1') === !!P.unlockAll));
   $$('#segPace button').forEach(b => b.classList.toggle('on', b.dataset.v === P.pace));
   $$('#segCalm button').forEach(b => b.classList.toggle('on', (b.dataset.v === '1') === !!P.calm));
+  $$('#segWords button').forEach(b => b.classList.toggle('on', (b.dataset.v === '1') === (P.words !== false)));
+  $$('#segStory button').forEach(b => b.classList.toggle('on', (b.dataset.v === '1') === (P.showStory !== false)));
   $('#focusChips').innerHTML = range(1, 10).map(n => `<button data-focus="${n}" class="${P.focus.includes(n) ? 'on' : ''}">${n}</button>`).join('');
   const nf = Object.keys(P.facts).length, ng = Object.keys(P.facts).filter(k => P.facts[k].b >= MASTERED).length;
   $('#ouderStats').textContent = `${P.rides} ritten · ${P.days.length} dagen geoefend · ${P.tot.c} van ${P.tot.n} goed · ${nf} verschillende sommen, ${ng} beheerst · ⭐ ${totalStars(P)} · 🪙 ${P.coins}` + (P.placed ? ` · instaptest: start in ${WORLDS[P.placed.world].name}` : '');
@@ -208,4 +210,14 @@ function finishDag() {
   $('#dagBanners').innerHTML = b;
   $('#dagEndTitle').textContent = allRec && R.score > 0 ? 'Record! 🏆' : 'Tijd! ⏱️';
   renderRecords('2'); show('scrDagEnd'); SFX.fanfare(); if (R.score > prevToday) confetti();
+}
+/* ---------- groep 1-2: iconen eerst ---------- */
+function youngNow() { if (!P) return false; if (R && R.lv) return R.lv.w <= 1; if (lastEnd && curScreen === 'scrEnd') return LEVELS[lastEnd.id].w <= 1; return LEVELS[nextLevel()].w <= 1; }
+const YOUNG_ICONS = { btnPlay: '▶️', btnMap: '🗺️', btnDag: '⏱️', btnGarage: '🚗', btnStickers: '🏷️', btnKaart: '⭐', btnStory: '📖', btnNext: '▶️', btnAgain: '🔁', btnResume: '▶️', btnQuit: '🏠', btnStoryNext: '▶️', btnRestSkip: '▶️', btnLvGo: '▶️', btnLvClose: '⬅️', btnPlDone: '▶️', btnEndMap: '🗺️' };
+function applyYoung() {
+  const y = youngNow(); document.body.classList.toggle('young', y);
+  for (const id in YOUNG_ICONS) { const b = document.getElementById(id); if (!b) continue;
+    if (b.dataset.yi === '1' && !b.querySelector('.yico')) b.dataset.yi = '';
+    if (y) { if (b.dataset.yi !== '1') { b.dataset.orig = b.innerHTML; b.dataset.yi = '1'; if (!b.getAttribute('aria-label')) b.setAttribute('aria-label', b.textContent.trim()); } b.innerHTML = `<span class="yico">${YOUNG_ICONS[id]}</span>`; }
+    else if (b.dataset.yi === '1') { b.innerHTML = b.dataset.orig; b.dataset.yi = ''; } }
 }

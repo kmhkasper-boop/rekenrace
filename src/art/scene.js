@@ -187,11 +187,11 @@ function drawGateRow(r) {
   if (alpha <= 0.01) return;
   ctx.save(); ctx.globalAlpha = alpha;
   const bob = Math.sin(TG * 3 + r.cl) * .03;
-  const fs = fitGateFont(r.opts, s);
+  const fs = fitGateFont(r.opts, s) * (r.big ? 1.35 : 1);
   ctx.font = `700 ${fs}px ${FONT}`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
   for (let i = 0; i < 3; i++) {
     const X = i - 1, x = CX + (X - camX) * s, txt = String(r.opts[i]), tw = ctx.measureText(txt).width;
-    const pw = Math.min(s * .97, Math.max(.9 * s, tw + 14)), ph = Math.max(.6 * s, fs * 1.3);
+    const pw = Math.min(s * .97, Math.max(.9 * s, tw + 14)), ph = Math.max(r.dots ? .75 * s : .6 * s, fs * 1.3);
     const yb = g - (.52 + bob) * s, yt = yb - ph;
     ctx.fillStyle = 'rgba(0,0,0,.14)'; ell(ctx, x, g, pw * .45, s * .07);
     const beam = r.golden ? 'rgba(255,214,64,.45)' : 'rgba(255,255,255,.4)';
@@ -204,7 +204,7 @@ function drawGateRow(r) {
     const bw = Math.max(3, s * .06);
     ctx.fillStyle = fill; rr(ctx, x - pw / 2 + bw, yt + bw, pw - bw * 2, ph - bw * 2, Math.max(4, s * .12)); ctx.fill();
     if (r.golden && !r.resolved) { ctx.fillStyle = '#fff6c9'; for (let k = 0; k < 3; k++) { const a = TG * 4 + k * 2.1 + i; circ(ctx, x + Math.cos(a) * pw * .55, yt + ph / 2 + Math.sin(a) * ph * .7, Math.max(1.5, s * .03)); } }
-    ctx.fillStyle = ink; ctx.fillText(txt, x, yt + ph / 2 + fs * .04);
+    if (r.dots && /^\d+$/.test(txt) && +txt <= 10) drawDotPic(ctx, +txt, x, yt + ph / 2, pw - bw * 3, ph - bw * 3, ink === '#fff' ? '#fff' : '#ff5a5f'); else { ctx.fillStyle = ink; ctx.fillText(txt, x, yt + ph / 2 + fs * .04); }
     ctx.globalAlpha = alpha;
   }
   ctx.restore();
@@ -242,7 +242,7 @@ function render() {
   for (const o of spr) o.d ? drawDecor(o.d, o.z) : drawGateRow(o.r);
   drawGhost(); drawPlayer();
   for (const r of rows) if (r.z <= ZP) drawGateRow(r);
-  drawParticles(); drawSpeedLines(); drawWeather();
+  drawParticles(); drawSpeedLines(); drawWeather(); drawTutor();
   if (theme.fog) { ctx.fillStyle = 'rgba(240,245,230,.18)'; ctx.fillRect(0, HOR - 20, W, (PY - HOR) * .5); }
   ctx.restore();
 }
@@ -250,3 +250,12 @@ function burstCoins(n, gold) { const sP = F / ZP, x = CX + (player.x - camX) * s
   for (let i = 0; i < n; i++) parts.push({ type: 'coin', x0: x + rnd(-20, 20), y0: y, tx: tg.left + tg.width / 2, ty: tg.top + tg.height / 2, t: -i * .07, dur: .65, gold }); }
 function burst(x, y, col, n, type) { for (let i = 0; i < n; i++) { const a = rnd(0, Math.PI * 2), v = rnd(60, 260); parts.push({ type: type || 'spark', x, y, vx: Math.cos(a) * v, vy: Math.sin(a) * v - 80, t: 0, dur: rnd(.4, .8), r: rnd(3, 7), col: Array.isArray(col) ? pickOne(col) : col }); } }
 function updateParticles(dt) { for (const p of parts) { p.t += dt; if (p.t < 0 || p.type === 'coin') continue; p.x += p.vx * dt; p.y += p.vy * dt; p.vy += 400 * dt; if (p.type === 'puff') { p.vx *= .9; p.vy = p.vy * .9 - 30 * dt; } } parts = parts.filter(p => p.t < p.dur); }
+
+/* beeld-uitleg zonder tekst: een hand wijst naar de goede poort en veegt erheen */
+function drawTutor() {
+  if (!R || !R.tutor || R.done >= 3 || R.phase !== 'run') return; const r = R.row; if (!r || r.resolved) return;
+  const s = sc(r.z), g = gy(r.z), gx = CX + (r.cl - 1 - camX) * s, sP = F / ZP, px = CX + (player.x - camX) * sP;
+  const k = (TG * .8) % 1, e = k < .6 ? k / .6 : 1, x = px + (gx - px) * e, y = PY - LANE * .2 + (g - s * .2 - (PY - LANE * .2)) * e;
+  ctx.save(); ctx.globalAlpha = k < .85 ? 1 : (1 - k) / .15; ctx.font = `${Math.max(34, LANE * .55)}px ${FONT}`; ctx.textAlign = 'center'; ctx.textBaseline = 'top';
+  ctx.fillStyle = 'rgba(255,255,255,.7)'; circ(ctx, gx, g - s * .85, s * .55 * (.8 + .2 * Math.sin(TG * 6))); ctx.globalAlpha *= 1; ctx.fillText('👆', x, y); ctx.restore();
+}

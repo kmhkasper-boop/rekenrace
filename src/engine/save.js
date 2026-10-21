@@ -4,7 +4,7 @@ function newProfile(name, av, avc) {
   return { id: 'p' + Date.now().toString(36) + ri(100, 999), name: name || 'Racer', av: av || '🦊', avc: avc || '#4cc3ff', created: Date.now(),
     coins: 0, owned: { veh: ['bliksem'], col: ['geel', 'rood'] }, veh: 'bliksem', col: 'geel', facts: {}, lv: {}, open: 0, placed: null,
     vouchers: 1, clears: 0, stickers: {}, unlockAll: false, focus: [], pace: 'normaal', calm: false, daily: {}, allTime: 0, allTimeDate: null,
-    days: [], rides: 0, seenHint: 0, story: {}, tot: { n: 0, c: 0 }, ghostWins: 0, bestStreak: 0, last: 0, restN: 0, seasonsDone: [], usedVoucher: 0, dagT: 0 };
+    days: [], rides: 0, seenHint: 0, story: {}, tot: { n: 0, c: 0 }, ghostWins: 0, bestStreak: 0, last: 0, restN: 0, seasonsDone: [], usedVoucher: 0, dagT: 0, words: true, wordsAsked: 0, showStory: true, tutorN: 0 };
 }
 function defaultG() { return { v: 2, cur: null, order: [], profiles: {}, muted: false }; }
 function fixProfile(p) { const d = newProfile(); for (const k in d) if (!(k in p)) p[k] = d[k]; if (!p.owned.veh.includes('bliksem')) p.owned.veh.unshift('bliksem'); return p; }

@@ -225,6 +225,72 @@ const LAYOUTS = [[360, 640], [375, 667], [390, 844], [1280, 800]];
     await pg.evaluate(() => { __rr.storyEnd(); show('scrPlace'); }); await chk('instaptest');
     await pg.context().close();
   }
+
+  /* 8. v2.1: vroeg kiezen, verhaaltjessommen, groep 1-2 */
+  console.log('▶ v2.1');
+  { const pg = await page([390, 844], URL0 + '?snel=1'); await quickProfile(pg, 'Snel');
+    await pg.evaluate(() => { __rr.P.unlockAll = true; __rr.P.wordsAsked = 1; __rr.P.seenHint = 9; __rr.startRide('level', 40, 'none'); });
+    await pg.waitForFunction(() => __rr.R.phase === 'run' && __rr.R.row && !__rr.R.row.resolved && __rr.R.row.age > .2, null, { timeout: 15000 });
+    const t0 = await pg.evaluate(() => { const r = __rr.R.row, c = r.cl, d = c - __rr.player.lane; if (d) move(Math.sign(d)); else { const s = sc(r.z); __rr.tapGate(CX + (c - 1 - camX) * s, gy(r.z) - s * .8); } return { z: r.z, coins: __rr.P.coins }; });
+    await pg.waitForTimeout(330); await pg.screenshot({ path: SHOTS + 'v21_vroeg_versnellen.png' });
+    const c1 = await pg.evaluate(() => ({ committed: __rr.R.results.length ? true : __rr.R.row.committed, res: __rr.R.results.length }));
+    ok(c1.committed, 'sturen naar baan = versnellen');
+    await pg.waitForFunction(() => __rr.R.results.length >= 1, null, { timeout: 3000 }).catch(() => { });
+    const c2 = await pg.evaluate(() => ({ n: __rr.R.results.length, ok: __rr.R.results[0] && __rr.R.results[0].ok, fastN: __rr.R.fastN, coins: __rr.P.coins }));
+    ok(c2.n === 1 && c2.ok, 'vroeg gekozen poort binnen ~1 s bereikt (' + JSON.stringify(c2) + ')');
+    ok(c2.fastN === 1 && c2.coins - t0.coins >= 3, 'snelle bonus (+1 munt)');
+    // tik op antwoordpoort
+    await pg.waitForFunction(() => __rr.R.row && !__rr.R.row.resolved && __rr.R.row.age > .3, null, { timeout: 15000 });
+    const g = await pg.evaluate(() => { const r = __rr.R.row, want = (r.cl + 1) % 3, s = sc(r.z), y = gy(r.z) - s * .8, x = CX + (want - 1 - camX) * s; return { x, y, want }; });
+    await pg.mouse.click(g.x, g.y);
+    ok(await pg.evaluate(w => __rr.R.results.length >= 2 || (__rr.player.lane === w && __rr.R.row.committed), g.want), 'tik op poort = kiezen + versnellen');
+    await pg.evaluate(() => { __rr.R.phase = 'end'; show('scrMenu'); });
+    // verhaaltjessommen uit
+    const w = await pg.evaluate(() => { __rr.P.words = false; const out = []; for (const s of __rr.WORD_SKILLS) for (let i = 0; i < 60; i++) { const it = __rr.buildItem(__rr.SK[s].gen()), q = __rr.qShow(it, false); out.push([s, !!it.bare, /[a-z]{5,}/i.test(q.replace(/€|min|uur|km/g, '')), q]); } return out.filter(x => !x[1] || x[2]).slice(0, 5); });
+    ok(w.length === 0, 'kale som zonder verhaal: ' + JSON.stringify(w));
+    await pg.evaluate(() => __rr.startRide('level', 15 * 9 + 3, 'none'));
+    await pg.waitForFunction(() => __rr.R.row && __rr.R.row.it.bare, null, { timeout: 30000 }).catch(() => { });
+    ok(await pg.evaluate(() => !__rr.R.row.it.bare || document.querySelector('#sumText').textContent === __rr.R.row.it.bare), 'race toont kale som');
+    await pg.evaluate(() => { __rr.R.phase = 'end'; show('scrMenu'); __rr.P.words = true; __rr.P.wordsAsked = 0; for (let i = 0; i < 16; i++) __rr.P.story['w' + i] = 1; __rr.playLevel(6 * 9); });
+    ok(await pg.evaluate(() => document.querySelector('#mdWords').classList.contains('show')), 'keuzevraag verhaaltjessommen bij eerste wereld');
+    await shot(pg, 'v21_keuze_verhaaltjes.png');
+    await pg.click('#btnWordsOff'); ok(await pg.evaluate(() => __rr.P.words === false && __rr.P.wordsAsked === 1 && !!__rr.R), 'kale sommen gekozen → rit start');
+    await pg.evaluate(() => { __rr.R.phase = 'end'; show('scrMenu'); __rr.openOuders(); });
+    ok(await pg.evaluate(() => document.querySelector('#segWords button.on').dataset.v === '0'), 'ouders: schakelaar staat uit');
+    await pg.click('#segWords button[data-v="1"]'); ok(await pg.evaluate(() => __rr.P.words === true), 'ouders: aanzetten');
+    await pg.click('#segStory button[data-v="0"]'); ok(await pg.evaluate(() => __rr.P.showStory === false), 'ouders: verhaal uit');
+    await pg.evaluate(() => document.querySelector('#segWords').scrollIntoView({ block: 'center' })); await shot(pg, 'v21_ouders_schakelaars.png');
+    await pg.evaluate(() => { $('#mdOuders').classList.remove('show'); __rr.P.story.w9 = 0; __rr.P.wordsAsked = 1; __rr.playLevel(9 * 9); });
+    ok(await pg.evaluate(() => __rr.curScreen === 'game'), 'verhaal uit → direct racen');
+    await pg.evaluate(() => { __rr.R.phase = 'end'; show('scrMenu'); });
+    // rust: tik = verder, adempauze pas na 3 s
+    await pg.evaluate(() => { __rr.P.restN = 0; runRest(() => show('scrMenu')); }); await pg.click('#restCv'); ok(await pg.evaluate(() => !__rr.REST), 'rustmoment: tik = verder');
+    await pg.evaluate(() => { __rr.P.restN = 2; runRest(() => show('scrMenu')); }); await pg.waitForTimeout(300);
+    ok(await pg.evaluate(() => getComputedStyle(document.querySelector('#btnRestSkip')).visibility === 'hidden'), 'adempauze: overslaan pas na 3 s');
+    await pg.click('#restCv'); ok(await pg.evaluate(() => !!__rr.REST), 'adempauze: tik vóór 3 s doet niets');
+    await pg.waitForTimeout(2900); await pg.click('#btnRestSkip'); ok(await pg.evaluate(() => !__rr.REST), 'adempauze: na 3 s over te slaan');
+    await pg.context().close(); }
+  { const pg = await page([390, 844], URL0 + '?snel=1'); await quickProfile(pg, 'Kleuter');
+    ok(await pg.evaluate(() => document.body.classList.contains('young') && !!document.querySelector('#btnPlay .yico')), 'groep 1-2: menu met iconen');
+    await shot(pg, 'v21_groep1_menu.png');
+    await pg.evaluate(() => { __rr.P.story.intro = 0; __rr.P.showStory = true; playStory('w0', () => show('scrMenu')); }); await pg.waitForTimeout(300);
+    ok(await pg.evaluate(() => document.querySelector('#bubble').classList.contains('pics') && document.querySelector('#bubblePic').textContent.length > 0), 'groep 1-2: verhaal als plaatjes');
+    await shot(pg, 'v21_groep1_verhaal.png'); await pg.evaluate(() => __rr.storyEnd());
+    await pg.evaluate(() => __rr.startRide('level', 0, 'none'));
+    await pg.waitForFunction(() => __rr.R.phase === 'run' && __rr.R.row && __rr.R.row.z < 8.5, null, { timeout: 15000 });
+    const y = await pg.evaluate(() => ({ tutor: __rr.R.tutor, dots: __rr.R.row.dots, pic: document.querySelector('#sumCard').classList.contains('pic'), txt: document.querySelector('#sumText').textContent, vis: getComputedStyle(document.querySelector('#sumVis')).display }));
+    ok(y.tutor && y.dots && y.pic && y.vis === 'block', 'groep 1: stippen-vraag, stippen-poorten, wijzende hand ' + JSON.stringify(y));
+    await pg.waitForTimeout(500); await shot(pg, 'v21_groep1_vraag.png');
+    // plus met appels (wereld 1)
+    const ap = await pg.evaluate(() => { const it = __rr.youngItem(__rr.buildItem('add:3:2')); return [it.vis && it.vis.type, __rr.qShow(it, true), it.ans]; });
+    ok(ap[0] === 'apples' && ap[1] === '' && ap[2] === '5', 'groep 1-2: 3 appels + 2 appels');
+    await pg.evaluate(() => { __rr.R.phase = 'end'; __rr.startRide('level', 9 + 1, 'none'); });
+    await pg.waitForFunction(() => __rr.R.phase === 'run' && __rr.R.row && __rr.R.row.it.vis && __rr.R.row.it.vis.type === 'apples' && __rr.R.row.z < 8.5, null, { timeout: 40000 }).catch(() => { });
+    await pg.waitForTimeout(300); await shot(pg, 'v21_groep1_appels.png');
+    await pg.evaluate(() => { __rr.R.phase = 'end'; show('scrMenu'); });
+    await pg.evaluate(() => { show('scrPlace'); __rr.placeStart(); __rr.PL.w = 0; placeQ(); });
+    ok(await pg.evaluate(() => getComputedStyle(document.querySelector('#plQ')).display === 'none' || document.querySelector('#plQ').textContent.length < 6), 'instaptest lage band zonder tekst');
+    await pg.context().close(); }
   ok(ext.length === 0, 'externe verzoeken: ' + [...new Set(ext)].join(', '));
   ok(errs.length === 0, 'console-fouten: ' + [...new Set(errs)].slice(0, 5).join(' | '));
   await b.close();
