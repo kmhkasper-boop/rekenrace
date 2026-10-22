@@ -47,6 +47,12 @@ const on = (id, f) => { $(id).onclick = f; };
 on('#btnPlay', () => { SFX.click(); playLevel(nextLevel()); });
 on('#btnMap', () => { SFX.click(); mapSeason = LEVELS[nextLevel()].s; show('scrMap'); });
 on('#btnDag', () => { SFX.click(); show('scrDag'); });
+on('#btnKleuter', () => { SFX.click(); show('scrKleuter'); });
+on('#btnCustom', () => { SFX.click(); show('scrCustom'); });
+on('#btnPlKleuter', () => { SFX.click(); P.kleuter = true; if (!P.placed) P.placed = { world: 0, date: dayKey(), kleuter: 1 }; P.story.intro = P.story.intro || 0; save(); show('scrKleuter'); });
+on('#btnCuGo', () => { SFX.click(); save(); startRide('custom'); });
+$('#klBox').addEventListener('click', e => { const b = e.target.closest('[data-kl]'); if (!b) return; const id = +b.dataset.kl; if (!isOpen(id)) { SFX.bad(); return; } SFX.click(); playLevel(id); });
+$('#scrCustom').addEventListener('click', e => { const b = e.target.closest('[data-cu]'); if (!b) return; cuTap(b.dataset.cu, b.dataset.v); });
 on('#btnGarage', () => { SFX.click(); show('scrGarage'); });
 on('#btnKaart', () => { SFX.click(); show('scrKaart'); });
 on('#btnStickers', () => { SFX.click(); show('scrStickers'); });
@@ -63,7 +69,7 @@ on('#btnNext', () => { SFX.click(); goNext(); });
 on('#btnPause', () => { SFX.click(); pauseGame(); });
 on('#btnResume', () => { SFX.click(); resumeGame(); });
 on('#btnCalm', () => { P.calm = !P.calm; save(); syncCalm(); $('#game').classList.toggle('calm', P.calm); if (!P.calm) $('#calmGo').classList.remove('show'); });
-on('#btnQuit', () => { const m = R && R.mode; SFX.click(); R = null; if (m === 'dag') show('scrDag'); else { if (lastRide && lastRide.levelId != null) mapSeason = LEVELS[lastRide.levelId].s; show('scrMap'); } });
+on('#btnQuit', () => { const m = R && R.mode; SFX.click(); R = null; if (m === 'dag') show('scrDag'); else if (m === 'custom') show('scrCustom'); else if (lastRide && lastRide.levelId >= NLEV) show('scrKleuter'); else { if (lastRide && lastRide.levelId != null) mapSeason = LEVELS[lastRide.levelId].s; show('scrMap'); } });
 on('#btnVoucher', () => { useVoucher(); });
 on('#btnWords', e => { e.stopPropagation(); toggleWords(); });
 on('#lvWords', () => toggleWords());
@@ -160,5 +166,5 @@ window.__rr = {
   SK, CAT, WORLDS, LEVELS, SEASONS, VEHICLES, STICKERS, STORY, MAKES, ASSET_FILES, player,
   parseKey, buildItem, makeOptions, pickKey, recordResult, startRide, playLevel, finishLevel, useVoucher, move, turbo, show, openLevel, openOuders,
   placeStart, placeAnswer, placeResult, applyPlacement, estimate, isOpen, nextLevel, setProfile, addProfile, migrateV1, loadG, endRest, storyEnd, storyNext,
-  reload() { G = loadG(); P = G.cur ? G.profiles[G.cur] : null; }, get curScreen() { return curScreen; }, qShow, youngItem, tapGate, commit, WORD_SKILLS, toggleWords, toggleStory, playStory, runRest, playLevelArt: playLevel,
+  reload() { G = loadG(); P = G.cur ? G.profiles[G.cur] : null; }, get curScreen() { return curScreen; }, qShow, youngItem, tapGate, commit, WORD_SKILLS, toggleWords, toggleStory, playStory, runRest, playLevelArt: playLevel, cuGen, customMix, migrate25, nextKleuter, isKl, finishCustom, NW, KLEV0,
 };

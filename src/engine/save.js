@@ -4,10 +4,10 @@ function newProfile(name, av, avc) {
   return { id: 'p' + Date.now().toString(36) + ri(100, 999), name: name || 'Racer', av: av || '🦊', avc: avc || '#4cc3ff', created: Date.now(),
     coins: 0, owned: { veh: ['bliksem'], col: ['geel', 'rood'] }, veh: 'bliksem', col: 'geel', facts: {}, lv: {}, open: 0, placed: null,
     vouchers: 1, clears: 0, stickers: {}, unlockAll: false, focus: [], pace: 'normaal', calm: false, daily: {}, allTime: 0, allTimeDate: null,
-    days: [], rides: 0, seenHint: 0, story: {}, tot: { n: 0, c: 0 }, ghostWins: 0, bestStreak: 0, last: 0, restN: 0, seasonsDone: [], usedVoucher: 0, dagT: 0, words: true, wordsAsked: 0, showStory: true, tutorN: 0 };
+    days: [], rides: 0, seenHint: 0, story: {}, tot: { n: 0, c: 0 }, ghostWins: 0, bestStreak: 0, last: 0, restN: 0, seasonsDone: [], usedVoucher: 0, dagT: 0, words: true, wordsAsked: 0, showStory: true, tutorN: 0, cv: 25, kleuter: false, custom: null };
 }
 function defaultG() { return { v: 2, cur: null, order: [], profiles: {}, muted: false }; }
-function fixProfile(p) { const d = newProfile(); for (const k in d) if (!(k in p)) p[k] = d[k]; if (!p.owned.veh.includes('bliksem')) p.owned.veh.unshift('bliksem'); return p; }
+function fixProfile(p) { const old = !p.cv; const d = newProfile(); for (const k in d) if (!(k in p)) p[k] = d[k]; if (old) migrate25(p); if (!p.owned.veh.includes('bliksem')) p.owned.veh.unshift('bliksem'); return p; }
 /* v1 → v2: sterren/munten/voertuigen/feiten blijven bewaard */
 function classifyOld(a, op, b) {
   if (op === 'x') return TA.includes(a) || TA.includes(b) ? 'tafA' : TB.includes(a) || TB.includes(b) ? 'tafB' : 'tafC';
@@ -39,8 +39,23 @@ function migrateV1(o) {
   for (const [old, ws] of map) if (st(old) > 0) for (const w of ws) for (let l = 0; l < LPW; l++) p.lv[w * LPW + l] = { st: Math.min(st(old), 2), cl: 1, plays: 0, pl: 1 };
   const cl = Object.keys(p.lv).map(Number); p.open = cl.length ? Math.min(NLEV - 1, Math.max(...cl) + 1) : 0;
   // levels tussen de overgenomen werelden (bijv. Klokkentoren) staan open, maar zijn nog niet gehaald
-  p.migrated = 1; p.clears = cl.length;
+  p.migrated = 1; p.clears = cl.length; delete p.cv; migrate25(p);
   return p;
+}
+/* v2.4 → v2.5: groep 1-2 (oude werelden 0-1) wordt de Kleuter-modus; Lente begint nu bij groep 3.
+   oud w0,w1 → kleuter (levels 144-161) · oud w2 Bruggetje → nieuw w1 · oud w3 Klokkentoren blijft w3 · w4+ ongewijzigd.
+   Nieuwe werelden (Splits-sloot w0, Tulpentuin w2) gelden als 'gehaald via instap' (0 sterren, pl) als je al verder was. Er gaat niets verloren. */
+function migrate25(p) {
+  const L = p.lv || {}, nl = {}, mapId = id => { const w = Math.floor(id / LPW), l = id % LPW; return w <= 1 ? NLEV + w * LPW + l : w === 2 ? LPW + l : id; };
+  for (const k in L) { const id = +k; if (id >= 0 && id < NLEV) nl[mapId(id)] = L[k]; }
+  const mainCl = Object.keys(nl).map(Number).filter(i => i < NLEV && nl[i].cl), maxCl = mainCl.length ? Math.max(...mainCl) : -1;
+  for (const w of [0, 2]) if (maxCl >= (w + 1) * LPW) for (let l = 0; l < LPW; l++) { const id = w * LPW + l; if (!nl[id]) nl[id] = { st: 0, cl: 1, pl: 1, plays: 0, best: 0 }; }
+  p.lv = nl;
+  const oldOpen = p.open || 0, oo = oldOpen <= 2 * LPW - 1 ? 0 : mapId(oldOpen);
+  p.open = Math.min(NLEV - 1, Math.max(oo, maxCl + 1, 0));
+  const st = p.story || {}; if (st.w1) st.w0 = 1; else delete st.w0; if (st.w2) st.w1 = 1; else delete st.w1; delete st.w2;
+  if (p.placed) { const w = p.placed.world || 0; if (w <= 1) { p.placed.world = 0; if (Object.keys(nl).some(i => +i >= NLEV) && maxCl < 0) p.kleuter = true; } else if (w === 2) p.placed.world = 1; }
+  p.cv = 25; p.migrated25 = 1;
 }
 function loadG() {
   try {
@@ -69,10 +84,11 @@ function streakText() { const st = streakOf(P);
 /* levels openen */
 const lvRec = id => P.lv[id] || null;
 const isCleared = id => !!(P.lv[id] && P.lv[id].cl);
-const isOpen = id => id === 0 || P.unlockAll || id <= P.open || isCleared(id - 1) || isCleared(id);
+const isOpen = id => id >= NLEV ? (id === NLEV || P.unlockAll || isCleared(id - 1) || isCleared(id)) : (id === 0 || P.unlockAll || id <= P.open || isCleared(id - 1) || isCleared(id));
 const worldOpen = w => isOpen(w * LPW);
 const seasonOpen = s => worldOpen(s * 4);
 function worldStars(w) { let s = 0; for (let l = 0; l < LPW; l++) s += (P.lv[w * LPW + l] || {}).st || 0; return s; }
+function nextKleuter() { for (let i = NLEV; i < NLEV + KLEVN; i++) if (!isCleared(i) && isOpen(i)) return i; return NLEV + KLEVN - 1; }
 function nextLevel() { for (let i = 0; i < NLEV; i++) if (!isCleared(i) && isOpen(i)) return i; return NLEV - 1; }
 
 /* Leitner (vakjes 0..5, -1 = nieuw) */

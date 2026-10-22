@@ -7,7 +7,7 @@ const DAG_T = [6.5, 3.5, 10];
 const fmtTime = s => { s = Math.max(0, Math.ceil(s)); return Math.floor(s / 60) + ':' + two(s % 60); };
 const effT = () => R.T * (PACE[P.pace] || 1) * ((R.row && R.row.it.tf) || 1);
 function dagMix() {
-  const open = WORLDS.filter(w => worldOpen(w.id)).map(w => w.id); const last = open.slice(-2);
+  const open = MAINW.filter(w => worldOpen(w.id)).map(w => w.id); const last = open.slice(-2);
   const mix = []; for (const w of open) { const wt = last.includes(w) ? 2 : .5; WORLDS[w].sk.flat().forEach(s => mix.push([s, wt])); }
   return mix;
 }
@@ -19,15 +19,16 @@ function chooseGhost(levelId, pref) {
 }
 function startRide(mode, levelId, ghostPref) {
   const lv = mode === 'level' ? LEVELS[levelId] : null;
-  const Tb = lv ? lv.T : DAG_T;
+  const cu = mode === 'custom', spec = cu ? (P.custom || cuDefault()) : null;
+  const Tb = lv ? lv.T : cu ? customT(spec) : DAG_T;
   const lr = lv ? (P.lv[lv.id] || {}) : null;
-  const T0 = lv ? (lr.T || Tb[0]) : (P.dagT || Tb[0]);
-  R = { mode, lv, mix: lv ? lv.mix : dagMix(), Tb, T: clamp(T0, Tb[1], Tb[2]),
-    total: lv ? lv.len : Infinity, extra: 0, done: 0, correct: 0, coins: 0, streak: 0, best: 0, score: 0, skips: 0,
+  const T0 = lv ? (lr.T || Tb[0]) : cu ? Tb[0] : (P.dagT || Tb[0]);
+  R = { mode, lv, spec, mix: lv ? lv.mix : cu ? customMix(spec) : dagMix(), Tb, T: clamp(T0, Tb[1], Tb[2]),
+    total: lv ? lv.len : cu ? CU_LEN : Infinity, extra: 0, done: 0, correct: 0, coins: 0, streak: 0, best: 0, score: 0, skips: 0,
     queue: [], recent: [], results: [], before: {}, phase: 'count', countN: 4, countT: 0, clock: 0, gap: .3,
-    row: null, timeLeft: DUUR, reviewP: lv ? (lv.boss ? .4 : .3) : .45, paused: false, finishAt: null,
+    row: null, timeLeft: DUUR, reviewP: lv ? (lv.boss ? .4 : .3) : cu ? .2 : .45, paused: false, finishAt: null,
     lastCL: -1, sameRun: 0, bossHit: 0, bossNeed: lv ? Math.ceil(lv.len * .7) : 0, speedLvl: 0, lastSec: -1, marks: [],
-    ghost: lv ? chooseGhost(lv.id, ghostPref) : null, young: !!(lv && lv.w <= 1), tutor: !!(lv && lv.w <= 1 && (P.tutorN || 0) < 3), fastN: 0, ghostState: null, bonusSeason: lv && lv.s === realSeason() };
+    ghost: lv ? chooseGhost(lv.id, ghostPref) : null, young: isKl(lv), tutor: !!(isKl(lv) && (P.tutorN || 0) < 3), fastN: 0, ghostState: null, bonusSeason: !!(lv && lv.s === realSeason()) };
   R.speedLvl = speedLevel();
   if (R.tutor) { P.tutorN = (P.tutorN || 0) + 1; }
   lastRide = { mode, levelId, ghostPref };
@@ -39,7 +40,7 @@ function startRide(mode, levelId, ghostPref) {
   $('#bossRow').classList.toggle('on', !!(lv && lv.boss));
   if (lv && lv.boss) $('#bossName').textContent = (lv.w % 4 === 3 ? SEASONS[lv.s].bossName : 'Graaf Chaos');
   $('#tipCard').classList.remove('show');
-  $('#sumCard').className = ''; setSumText(lv ? `${WORLDS[lv.w].name} · ${lv.name}` : '1 minuut!'); showVis(null);
+  $('#sumCard').className = ''; setSumText(lv ? (isKl(lv) ? '🧸 ' + WORLDS[lv.w].icon + ' ' + (lv.l + 1) : `${WORLDS[lv.w].name} · ${lv.name}`) : cu ? '🎛️ ' + CU_LEN : '1 minuut!'); showVis(null);
   show('game'); layout(); spawnDecor(dist + ZFAR);
   $('#swipeHint').textContent = R.young ? '👈 👉  ⬆️' : '👈 👉 sturen · ⬆️ of ✋ vasthouden = versnellen'; $('#swipeHint').classList.toggle('show', (P.seenHint || 0) < 3 && !R.tutor);
   updateHud();
@@ -74,10 +75,10 @@ function updateHud() {
   $('#hudCoins').textContent = P.coins; $('#hudStreak').textContent = R.streak; $('#pillStreak').classList.toggle('hot', R.streak >= 3);
   $('#hudScore').textContent = R.score;
   const vb = $('#btnVoucher'); vb.style.display = R.mode === 'level' && P.vouchers > 0 ? '' : 'none'; $('#vCount').textContent = P.vouchers;
-  if (R.mode === 'level') {
+  if (R.mode === 'level' || R.mode === 'custom') {
     $('#progFill').style.width = (R.done / R.total * 100) + '%'; $('#progFill').style.background = '';
     $('#progText').textContent = `${R.done}/${R.total}`;
-    if (R.lv.boss) $('#bossFill').style.width = Math.max(0, 100 - R.correct / R.bossNeed * 100) + '%';
+    if (R.lv && R.lv.boss) $('#bossFill').style.width = Math.max(0, 100 - R.correct / R.bossNeed * 100) + '%';
   } else updateTimer(true);
   updateGhostPill();
 }
@@ -130,6 +131,7 @@ function resolve(row) {
     let coins = row.golden ? 4 : 2; const combo = R.streak % 5 === 0, quick = rt <= fast * .5;
     if (quick) { coins += 1; R.fastN++; }
     if (combo) coins += 3; if (R.bonusSeason) coins += 1;
+    if (R.mode === 'custom') coins = Math.max(1, Math.round(coins * .4));   // zelf kiezen: minder munten
     P.coins += coins; R.coins += coins;
     if (R.mode === 'dag') R.score += 1 + (combo ? 2 : 0);
     boostT = .8; R.bossHit = .5;
@@ -146,13 +148,13 @@ function resolve(row) {
     const last3 = R.results.slice(-3).filter(r => !r.ok).length;
     R.T *= last3 >= 2 ? 1.17 : 1.11;
     R.queue = R.queue.filter(q => q.k !== it.k);
-    if (R.mode === 'level') { const remaining = R.total - R.done;
+    if (R.mode === 'level' || R.mode === 'custom') { const remaining = R.total - R.done;
       if (remaining <= 0) { if (R.extra < 3) { R.total++; R.extra++; R.queue.push({ k: it.k, s: row.s, due: R.done }); } }
       else R.queue.push({ k: it.k, s: row.s, due: R.done + Math.min(3, remaining - 1) }); }
     else R.queue.push({ k: it.k, s: row.s, due: R.done + 3 });
     const qq = qShow(it, R.young); $('#sumCard').className = 'bad' + (it.vis ? ' hasvis' : ''); setSumText(qq || '');
     $('#tipHead').textContent = `${pickOne(OOPS)} Jij koos ${row.opts[row.chosen]}.`;
-    $('#tipSum').textContent = R.young ? (it.dotGates || /^\d+$/.test(it.ans) && +it.ans <= 10 ? '●'.repeat(+it.ans) + '  ' + it.ans : it.ans) : qq.length > 22 ? `Antwoord: ${it.ans}` : `${qq} = ${it.ans}`;
+    $('#tipSum').innerHTML = R.young ? (it.dotGates || /^\d+$/.test(it.ans) && +it.ans <= 10 ? dotsHTML(+it.ans) + ' <b class="tipn">' + esc(it.ans) + '</b>' : esc(it.ans)) : esc( qq.length > 22 ? `Antwoord: ${it.ans}` : `${qq} = ${it.ans}`);
     $('#tipText').textContent = R.young ? '' : '💡 ' + it.tip; $('#tipCard').classList.toggle('young', R.young); if (R.young) $('#tipHead').textContent = '🙂 👉';
     $('#tipCard').classList.add('show');
     R.gap = (R.young ? 1.6 : R.mode === 'dag' ? 1.5 : 2.2) / SNEL * (!R.young && it.tip.length > 70 ? 1.3 : 1);
@@ -165,7 +167,7 @@ function resolve(row) {
   updateHud(); save();
 }
 function checkFinish(ok) {
-  if (R.mode === 'level' && R.done >= R.total) {
+  if ((R.mode === 'level' || R.mode === 'custom') && R.done >= R.total) {
     if (R.queue.some(q => q.skip)) { R.total++; R.queue.forEach(q => { if (q.skip) q.due = Math.min(q.due, R.done); }); return; }
     if (R.queue.length && R.extra < 3) { R.total++; R.extra++; }
     else R.finishAt = R.clock + (ok ? .6 : 1.8) / SNEL;
@@ -207,7 +209,7 @@ function update(dt) {
     else row.z -= (row.committed ? Math.max(vGate * 6, 14 * SNEL) : vGate * (row.turbo ? 3.5 : 1)) * dt;
     row.age += dt; if (row.z <= ZP) resolve(row);
   }
-  else if (R.finishAt != null) { if (R.clock >= R.finishAt) { finishLevel(); return; } }
+  else if (R.finishAt != null) { if (R.clock >= R.finishAt) { R.mode === 'custom' ? finishCustom() : finishLevel(); return; } }
   else { R.gap -= dt; if (R.gap <= 0) spawnNext(); }
   for (const r of rows) if (r.resolved) r.z -= (vGate + VS * .5) * dt;
   rows = rows.filter(r => r.z > ZNEAR * .8);

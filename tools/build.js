@@ -2,7 +2,7 @@
 // Bouwt src/* tot één index.html + sw.js (geen externe verzoeken).
 const fs = require('fs'), path = require('path'), crypto = require('crypto');
 const root = path.join(__dirname, '..'), src = p => fs.readFileSync(path.join(root, 'src', p), 'utf8');
-const ORDER = ['engine/util', 'engine/gen', 'engine/skills', 'data/curriculum', 'data/rewards', 'data/story', 'data/strips', 'engine/save', 'engine/audio',
+const ORDER = ['engine/util', 'engine/gen', 'engine/skills', 'data/curriculum', 'data/rewards', 'data/story', 'data/strips', 'engine/custom', 'engine/save', 'engine/audio',
   'art/assets', 'art/draw', 'art/vehicles', 'art/chars', 'art/vis', 'art/scene', 'engine/race', 'ui/flow', 'ui/screens', 'ui/place', 'ui/main'];
 const assetDir = path.join(root, 'assets');
 const assets = fs.existsSync(assetDir) ? fs.readdirSync(assetDir).filter(f => f.endsWith('.webp')).sort() : [];

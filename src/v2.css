@@ -135,3 +135,33 @@ h1.logo img.emb{width:1.15em;height:1.15em;vertical-align:-.18em;margin-right:.0
 @media (orientation:landscape){.art-garage #scrGarage{background-image:url(assets/ui_garage_l.webp)}}
 .banner img.kri{width:1.8em;height:1.8em;vertical-align:-.6em}
 #scrStory.strip #bubble{display:none}
+
+/* ===== v2.5: tel-rijtjes, Kleuters, Zelf kiezen ===== */
+.cdots{display:inline-flex;flex-direction:column;align-items:center;line-height:.95;letter-spacing:.08em;vertical-align:middle}
+.cdots>span{display:block;white-space:nowrap}
+.pldots .cdots{font-size:.95em;color:#ff5a5f}
+#tipSum .cdots{font-size:1.15em;color:#ff5a5f;margin-right:.3em} #tipSum .tipn{vertical-align:middle}
+.modebtn{flex-direction:row;gap:.35em}.modebtn .mico{font-size:1.6em;line-height:1}
+.btn.blue{background:#2f9be0}
+#btnPlKleuter{width:100%;margin-top:6px;font-size:1em}
+#klBox{display:grid;gap:16px;width:min(100%,640px)}
+.klsec{background:rgba(255,255,255,.85);border-radius:22px;padding:12px;display:flex;gap:12px;align-items:center}
+.klhead img.wico{width:72px;height:72px}
+.klgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(64px,1fr));gap:10px;flex:1}
+.klbtn{border:0;border-radius:18px;background:#ffd23f;color:#1f2a44;font:800 1.5em/1 var(--font,inherit);min-height:72px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;box-shadow:0 5px 0 rgba(0,0,0,.18);cursor:pointer}
+.klbtn.next{background:#5fd27d;color:#fff;animation:pulse 1.4s infinite}
+.klbtn.locked{background:#cfd6e2;color:#8a93a6}
+.klst{font-size:.5em;color:#e8a400;letter-spacing:.05em}.klbtn.next .klst{color:#fff}
+.cucard{display:grid;gap:12px;width:min(100%,560px)}
+.cusec{display:grid;gap:6px}
+.cuchips{display:flex;flex-wrap:wrap;gap:8px}
+.cuchip{border:3px solid #cfd6e2;background:#fff;border-radius:16px;padding:.35em .7em;font:700 1.05em/1.2 inherit;color:#1f2a44;cursor:pointer;min-height:44px;min-width:52px}
+.cuchip.big{font-size:1.5em;min-width:64px;padding:.2em .5em}
+.cuchip.on{background:#5fd27d;border-color:#3aa85a;color:#fff}
+.cuchip small{font-size:.7em;font-weight:600}
+#cuMore summary{cursor:pointer;font-weight:800;padding:6px 0}
+#cuMore[open] summary{margin-bottom:6px}
+#cuNote{min-height:1.2em}
+.menugrid{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}
+.modebtn{min-width:0;white-space:normal;line-height:1.1;padding-left:.5em;padding-right:.5em}
+@media (orientation:landscape) and (max-height:520px){.menugrid{grid-template-columns:repeat(4,minmax(0,1fr))}}

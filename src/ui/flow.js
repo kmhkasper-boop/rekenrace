@@ -15,14 +15,14 @@ function finishLevel() {
   rec.T = +clamp(R.T * 1.05, R.Tb[1], R.Tb[2]).toFixed(2);
   const info = { id: lv.id, stars, pct, cleared, bossWin, newBest, banners: [], storyB: null, nextOpen: false };
   if (firstClear) {
-    P.clears++; P.open = Math.max(P.open, Math.min(NLEV - 1, lv.id + 1)); info.nextOpen = lv.id + 1 < NLEV;
+    P.clears++; if (!isKl(lv)) { P.open = Math.max(P.open, Math.min(NLEV - 1, lv.id + 1)); info.nextOpen = lv.id + 1 < NLEV; } else info.nextOpen = lv.id + 1 < NLEV + KLEVN;
     if (P.clears % 3 === 0) { if (P.vouchers < 3) { P.vouchers++; info.banners.push('🎟️ Je kreeg een <b>Sla-deze-som-over-bon</b>! Tik hem aan tijdens een rit.'); } }
-    if (lv.boss && lv.w % 4 === 3 && !P.seasonsDone.includes(lv.s)) {
+    if (lv.boss && !isKl(lv) && lv.w % 4 === 3 && !P.seasonsDone.includes(lv.s)) {
       P.seasonsDone.push(lv.s); const v = VEHICLES.find(x => x.s === lv.s && x.how === 'boss');
       if (v && !P.owned.veh.includes(v.id)) { P.owned.veh.push(v.id); info.banners.push(`🏆 Nieuw voertuig gewonnen: <b>${v.name}</b>! Kijk in de garage.`); }
       info.banners.push(`${aimg('ui_kristal_' + SEASONS[lv.s].key, SEASONS[lv.s].icon, 'kri')} Je hebt het <b>${SEASONS[lv.s].name}kristal</b> terug!`); info.storyB = 'b' + lv.s;
     }
-    if (lv.l === LPW - 1 && lv.w + 1 < WORLDS.length && WORLDS[lv.w + 1].s !== lv.s) info.banners.push(`${SEASONS[lv.s + 1].icon} Een nieuw seizoen gaat open: <b>${SEASONS[lv.s + 1].name}</b>!`);
+    if (lv.l === LPW - 1 && lv.w + 1 < NW && WORLDS[lv.w + 1].s !== lv.s) info.banners.push(`${SEASONS[lv.s + 1].icon} Een nieuw seizoen gaat open: <b>${SEASONS[lv.s + 1].name}</b>!`);
   }
   if (lv.boss) info.banners.push(bossWin ? `👹 Je hebt ${lv.w % 4 === 3 ? SEASONS[lv.s].bossName : 'Graaf Chaos'} verslagen!` : `👹 De eindbaas heeft nog energie. Nog ${R.bossNeed - R.correct} goede antwoorden nodig!`);
   // spook
@@ -52,12 +52,13 @@ function renderEnd(info) {
   if (info.newBest && info.stars > 0 && !info.banners.length) b += `<div class="banner">⭐ Nieuw sterrenrecord in dit level!</div>`;
   for (const s of info.stickers || []) b += `<div class="banner purple">🏷️ Nieuwe sticker: <b>${esc(s)}</b></div>`;
   $('#endBanners').innerHTML = b;
-  const last = info.id === NLEV - 1 && info.cleared;
-  $('#btnNext').textContent = last ? '🎉 Het einde van het verhaal' : info.cleared ? '➡️ Volgende level' : '🔁 Nog een poging';
-  $('#btnNext').dataset.yi = ''; if (LEVELS[info.id].w <= 1) { $('#endMsg').textContent = `✅ ${R.correct}   ❌ ${R.done - R.correct}`; $('#endWorld').textContent = SEASONS[LEVELS[info.id].s].icon + ' ' + WORLDS[LEVELS[info.id].w].icon + ' ' + (LEVELS[info.id].l + 1); }
+  const kl = isKl(lv), last = (kl ? info.id === NLEV + KLEVN - 1 : info.id === NLEV - 1) && info.cleared;
+  $('#btnNext').textContent = kl ? (last ? '🧸 🏠' : info.cleared ? '▶️' : '🔁') : last ? '🎉 Het einde van het verhaal' : info.cleared ? '➡️ Volgende level' : '🔁 Nog een poging';
+  $('#btnNext').dataset.yi = ''; $('#btnEndMap').dataset.go = kl ? 'scrKleuter' : 'scrMap'; $('#btnEndMap').textContent = kl ? '🧸' : '🗺️ Kaart'; if (kl) { $('#endMsg').textContent = `✅ ${R.correct}   ❌ ${R.done - R.correct}`; $('#endWorld').textContent = SEASONS[LEVELS[info.id].s].icon + ' ' + WORLDS[LEVELS[info.id].w].icon + ' ' + (LEVELS[info.id].l + 1); }
 }
 function goNext() {
-  const info = lastEnd; if (!info) return;
+  const info = lastEnd; if (!info) return; if (info.custom) { show('scrCustom'); return; }
+  if (isKl(LEVELS[info.id])) { const last = info.id >= NLEV + KLEVN - 1 && info.cleared; runRest(() => last ? show('scrKleuter') : playLevel(info.cleared ? info.id + 1 : info.id)); return; }
   const next = info.cleared ? Math.min(NLEV - 1, info.id + 1) : info.id;
   const finale = info.id === NLEV - 1 && info.cleared;
   runRest(() => {
@@ -71,7 +72,8 @@ function playLevel(id, ghostPref) {
   const w = LEVELS[id].w, key = 'w' + w;
   const go0 = () => startRide('level', id, ghostPref == null ? defaultGhost(id) : ghostPref);
   const go = () => { if (!P.wordsAsked && WORLDS[w].sk.flat().some(x => WORD_SKILLS.includes(x))) { wordsThen = go0; $('#mdWords').classList.add('show'); } else go0(); };
-  if (!P.story.intro) playStory('intro', () => playStory(key, go));
+  if (WORLDS[w].kl) go();
+  else if (!P.story.intro) playStory('intro', () => playStory(key, go));
   else if (!P.story[key]) playStory(key, go); else go();
 }
 
@@ -80,7 +82,7 @@ let REST = null;
 function runRest(done) {
   P.restN = (P.restN || 0) + 1; save();
   const breathe = P.restN % 3 === 0;
-  const lv = lastEnd ? LEVELS[lastEnd.id] : LEVELS[0];
+  const lv = lastEnd && lastEnd.id != null ? LEVELS[lastEnd.id] : { s: realSeason() };
   const anims = REST_ANIM_BY_SEASON[lv.s].filter(k => ART.has('rest_' + k)), type = breathe ? 'adem' : anims.length ? pickOne(anims) : pickOne(REST_BY_SEASON[lv.s]);
   REST = { type, t: 0, dur: (breathe ? 10 : 5) / SNEL, done, s: lv.s };
   $('#restText').textContent = youngNow() ? (breathe ? '🫧 😌' : '☕ 🙂') : (breathe ? 'Even rust. Adem mee met het rondje…' : REST_TXT[type] || REST_ANIM[type]) + (breathe ? '' : ' (tik om verder te gaan)');

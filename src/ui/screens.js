@@ -1,5 +1,5 @@
 /* ===== schermen ===== */
-const SCREENS = ['scrProfiles', 'scrNew', 'scrMenu', 'scrMap', 'scrGarage', 'scrStickers', 'scrKaart', 'scrEnd', 'scrDag', 'scrDagEnd', 'scrPlace', 'scrStory', 'scrRest'];
+const SCREENS = ['scrKleuter', 'scrCustom', 'scrProfiles', 'scrNew', 'scrMenu', 'scrMap', 'scrGarage', 'scrStickers', 'scrKaart', 'scrEnd', 'scrDag', 'scrDagEnd', 'scrPlace', 'scrStory', 'scrRest'];
 let curScreen = 'scrMenu';
 function show(id) {
   SCREENS.forEach(s => $('#' + s).classList.toggle('show', s === id)); curScreen = id;
@@ -33,6 +33,8 @@ const RENDER = {
     const n = nextLevel(), lv = LEVELS[n]; $('#btnPlay').innerHTML = `🏁 Rijden! <small>${SEASONS[lv.s].icon} ${WORLDS[lv.w].name} · ${lv.name}</small>`;
   },
   scrMap() { renderMap(); },
+  scrKleuter() { renderKleuter(); },
+  scrCustom() { renderCustom(); },
   scrGarage() { renderGarage(); },
   scrStickers() { renderStickers(); },
   scrKaart() { renderKaart(); },
@@ -59,7 +61,7 @@ function renderMap() {
   let h = '';
   for (let wi = 0; wi < 4; wi++) {
     const w = WORLDS[mapSeason * 4 + wi], wo = worldOpen(w.id);
-    h += `<section class="wsec ${wo ? '' : 'locked'}"><div class="whead"><span class="wi">${wo ? aimg('icon_w' + w.id, w.icon, 'wico') : '🔒'}</span><span><b>${w.name}</b><br><small>${w.groep} · ${aimg('ui_ster', '⭐')} ${worldStars(w.id)}/27</small></span></div><div class="path">`;
+    h += `<section class="wsec ${wo ? '' : 'locked'}"><div class="whead"><span class="wi">${wo ? aimg(w.art, w.icon, 'wico') : '🔒'}</span><span><b>${w.name}</b><br><small>${w.groep} · ${aimg('ui_ster', '⭐')} ${worldStars(w.id)}/27</small></span></div><div class="path">`;
     for (let l = 0; l < LPW; l++) {
       const lv = levelOf(w.id, l), op = isOpen(lv.id), rec = P.lv[lv.id] || {}, st = rec.pl ? 0 : rec.st || 0, nx = lv.id === nextLevel();
       h += `<button class="node ${op ? '' : 'locked'} ${lv.boss ? 'boss' : ''} ${rec.cl ? 'done' : ''} ${rec.pl ? 'placed' : ''} ${nx ? 'next' : ''}" data-level="${lv.id}" aria-label="${w.name} ${lv.name}" style="--i:${l}">
@@ -151,9 +153,9 @@ function cellInfo(k) {
 /* ---------- ouders ---------- */
 function estimate(p) {
   // hoogste wereld die echt beheerst wordt: ≥5 levels gehaald (niet via instaptest) met gem. ≥2 sterren, of ≥80% goed bij ≥15 pogingen
-  const acc = {}; for (const k in p.facts) { const r = p.facts[k]; for (const w of WORLDS) if (w.sk.flat().includes(r.s)) { const a = acc[w.id] || (acc[w.id] = { n: 0, c: 0 }); a.n += r.n; a.c += r.c; } }
+  const acc = {}; for (const k in p.facts) { const r = p.facts[k]; for (const w of MAINW) if (w.sk.flat().includes(r.s)) { const a = acc[w.id] || (acc[w.id] = { n: 0, c: 0 }); a.n += r.n; a.c += r.c; } }
   let best = -1;
-  for (const w of WORLDS) {
+  for (const w of MAINW) {
     let cl = 0, st = 0; for (let l = 0; l < LPW; l++) { const r = p.lv[w.id * LPW + l]; if (r && r.cl && !r.pl) { cl++; st += r.st; } }
     const a = acc[w.id]; if ((cl >= 5 && st / cl >= 2) || (a && a.n >= 15 && a.c / a.n >= .8)) best = w.id;
   }
@@ -213,7 +215,8 @@ function finishDag() {
   renderRecords('2'); show('scrDagEnd'); SFX.fanfare(); if (R.score > prevToday) confetti();
 }
 /* ---------- groep 1-2: iconen eerst ---------- */
-function youngNow() { if (!P) return false; if (R && R.lv) return R.lv.w <= 1; if (lastEnd && curScreen === 'scrEnd') return LEVELS[lastEnd.id].w <= 1; return LEVELS[nextLevel()].w <= 1; }
+function youngNow() { if (!P) return false; if (R) return !!R.young; const kE = !!(lastEnd && lastEnd.id != null && isKl(LEVELS[lastEnd.id]));
+  if (curScreen === 'scrKleuter') return true; if (curScreen === 'scrEnd' || curScreen === 'scrRest') return kE; if (curScreen === 'scrMenu') return !!P.kleuter; return false; }
 const YOUNG_ICONS = { btnPlay: '▶️', btnMap: '🗺️', btnDag: '⏱️', btnGarage: '🚗', btnStickers: '🏷️', btnKaart: '⭐', btnStory: '📖', btnNext: '▶️', btnAgain: '🔁', btnResume: '▶️', btnQuit: '🏠', btnStoryNext: '▶️', btnRestSkip: '▶️', btnLvGo: '▶️', btnLvClose: '⬅️', btnPlDone: '▶️', btnEndMap: '🗺️' };
 function applyYoung() {
   const y = youngNow(); document.body.classList.toggle('young', y);
@@ -227,9 +230,57 @@ function applyYoung() {
 function aimg(n, fb, cls) { return ART.has(n) ? `<img class="aimg ${cls || ''}" src="assets/${n}.webp" alt="${fb}" draggable="false">` : fb; }
 function artDom() {
   const sw = (sel, n, fb) => document.querySelectorAll(sel).forEach(e => { if (ART.has(n)) e.innerHTML = aimg(n, fb); });
-  sw('#hud .pill > span:first-child', 'ui_munt', '🪙');
+  { const hc = $('#hudCoins'), e = hc && hc.previousElementSibling; if (e && ART.has('ui_munt')) e.innerHTML = aimg('ui_munt', '🪙'); }
   const v = $('#btnVoucher'); if (v && ART.has('ui_skip_voucher')) v.innerHTML = aimg('ui_skip_voucher', '🎟️', 'vimg') + ' Overslaan <b id="vCount">' + (($('#vCount') || {}).textContent || 0) + '</b>';
   document.querySelectorAll('h1.logo .bolt').forEach(e => { if (ART.has('ui_logo_embleem')) e.outerHTML = aimg('ui_logo_embleem', '⚡', 'emb'); });
   if (ART.has('ui_garage')) document.documentElement.classList.add('art-garage');
 }
 artDom();
+
+/* ---------- Kleuter-modus: grote plaatjesknoppen, eigen sterren ---------- */
+function renderKleuter() {
+  let h = '', tot = 0;
+  for (const w of KWORLDS) {
+    h += `<section class="klsec"><div class="klhead">${aimg(w.art, w.icon, 'wico')}</div><div class="klgrid">`;
+    for (let l = 0; l < LPW; l++) { const id = w.id * LPW + l, r = P.lv[id] || {}, op = isOpen(id), st = r.st || 0; tot += st;
+      h += `<button class="klbtn ${op ? '' : 'locked'} ${id === nextKleuter() ? 'next' : ''}" data-kl="${id}" aria-label="Level ${l + 1}">${op ? (l === LPW - 1 ? '👹' : l + 1) : '🔒'}<span class="klst">${'★'.repeat(st)}${'☆'.repeat(3 - st)}</span></button>`; }
+    h += '</div></section>';
+  }
+  $('#klBox').innerHTML = h; $('#klStars').textContent = tot; applyYoung();
+}
+/* ---------- Zelf kiezen ---------- */
+function cuSpec() { if (!P.custom) P.custom = cuDefault(); return P.custom; }
+function cuTap(f, v) {
+  const s = cuSpec(); SFX.click();
+  const tog = (arr, x) => { const i = arr.indexOf(x); i < 0 ? arr.push(x) : arr.splice(i, 1); };
+  if (f === 'ops') v === '' ? (s.ops = []) : tog(s.ops, v);
+  else if (f === 'max') s.max = +v || 0;
+  else if (f === 'diff') s.diff = v;
+  else if (f === 'ex') tog(s.ex, v);
+  else if (f === 'taf') { v === '' ? (s.taf = []) : tog(s.taf, +v); if (s.taf.length && !s.ops.includes('mul') && !s.ops.includes('div')) s.ops.push('mul'); }
+  save(); renderCustom();
+}
+function renderCustom() {
+  const s = cuSpec(), chip = (f, v, lab, on, cls) => `<button class="cuchip ${on ? 'on' : ''} ${cls || ''}" data-cu="${f}" data-v="${v}" aria-pressed="${on}">${lab}</button>`, any = '🎲';
+  $('#cuOps').innerHTML = CU_OPS.map(([v, l]) => chip('ops', v, l, s.ops.includes(v), 'big')).join('') + chip('ops', '', any, !s.ops.length, 'big');
+  $('#cuMax').innerHTML = CU_MAX.map(v => chip('max', v, v.toLocaleString('nl-NL'), s.max === v)).join('') + chip('max', 0, any, !s.max);
+  $('#cuDiff').innerHTML = CU_DIFF.map(([v, l]) => chip('diff', v, l, s.diff === v, 'big')).join('') + chip('diff', '', any, !s.diff, 'big');
+  $('#cuExtra').innerHTML = CU_EX.map(([v, l, n]) => chip('ex', v, `${l} <small>${n}</small>`, s.ex.includes(v))).join('');
+  $('#cuTaf').innerHTML = range(2, 10).map(v => chip('taf', v, '×' + v, s.taf.includes(v))).join('') + chip('taf', '', any, !s.taf.length);
+  if (s.ex.length || s.taf.length) $('#cuMore').open = true;
+  const ex = cuGen((s.ops.length ? s.ops : ['add', 'sub', 'mul', 'div'])[0], s), it = buildItem(ex);
+  $('#cuNote').textContent = s.ops.length || !s.ex.length ? `bijv. ${it.q}` : '';
+}
+function finishCustom() {
+  R.phase = 'end'; P.seenHint = (P.seenHint || 0) + 1; markPracticed(); P.rides++;
+  const stk = checkStickers(); save(); lastEnd = { id: null, custom: true };
+  $('#endTitle').textContent = 'Klaar! 🏁'; $('#endWorld').textContent = '🎛️ Zelf gekozen';
+  const pct = R.done ? R.correct / R.done : 0, st = pct >= .95 ? 3 : pct >= .8 ? 2 : pct >= .6 ? 1 : 0;
+  $('#endStars').innerHTML = [0, 1, 2].map(i => `<span class="${i < st ? 'star-on' : 'star-off'}" style="animation-delay:${.15 + i * .25}s">★</span>`).join('');
+  $('#endMsg').textContent = `✅ ${R.correct}   ❌ ${R.done - R.correct}`;
+  $('#endStats').innerHTML = `<span class="stat gold">${aimg('ui_munt', '🪙')} +${R.coins}</span><span class="stat">🔥 ${R.best}</span>`;
+  const seen = new Set(); $('#endChips').innerHTML = R.results.filter(r => !seen.has(r.k) && seen.add(r.k)).slice(0, 24).map(r => `<span class="chip ${r.ok ? 'ok' : 'bad'}">${esc(r.q.length > 16 ? r.ans : r.q)}</span>`).join('');
+  $('#endBanners').innerHTML = stk.map(s => `<div class="banner purple">🏷️ Nieuwe sticker: <b>${esc(s)}</b></div>`).join('');
+  $('#btnNext').textContent = '🎛️ Andere keuze'; $('#btnEndMap').dataset.go = 'scrMenu'; $('#btnEndMap').textContent = '🏠 Menu';
+  show('scrEnd'); SFX.fanfare(); if (st >= 2) confetti();
+}

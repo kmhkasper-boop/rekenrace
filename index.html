@@ -372,6 +372,36 @@ h1.logo img.emb{width:1.15em;height:1.15em;vertical-align:-.18em;margin-right:.0
 .banner img.kri{width:1.8em;height:1.8em;vertical-align:-.6em}
 #scrStory.strip #bubble{display:none}
 
+/* ===== v2.5: tel-rijtjes, Kleuters, Zelf kiezen ===== */
+.cdots{display:inline-flex;flex-direction:column;align-items:center;line-height:.95;letter-spacing:.08em;vertical-align:middle}
+.cdots>span{display:block;white-space:nowrap}
+.pldots .cdots{font-size:.95em;color:#ff5a5f}
+#tipSum .cdots{font-size:1.15em;color:#ff5a5f;margin-right:.3em} #tipSum .tipn{vertical-align:middle}
+.modebtn{flex-direction:row;gap:.35em}.modebtn .mico{font-size:1.6em;line-height:1}
+.btn.blue{background:#2f9be0}
+#btnPlKleuter{width:100%;margin-top:6px;font-size:1em}
+#klBox{display:grid;gap:16px;width:min(100%,640px)}
+.klsec{background:rgba(255,255,255,.85);border-radius:22px;padding:12px;display:flex;gap:12px;align-items:center}
+.klhead img.wico{width:72px;height:72px}
+.klgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(64px,1fr));gap:10px;flex:1}
+.klbtn{border:0;border-radius:18px;background:#ffd23f;color:#1f2a44;font:800 1.5em/1 var(--font,inherit);min-height:72px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;box-shadow:0 5px 0 rgba(0,0,0,.18);cursor:pointer}
+.klbtn.next{background:#5fd27d;color:#fff;animation:pulse 1.4s infinite}
+.klbtn.locked{background:#cfd6e2;color:#8a93a6}
+.klst{font-size:.5em;color:#e8a400;letter-spacing:.05em}.klbtn.next .klst{color:#fff}
+.cucard{display:grid;gap:12px;width:min(100%,560px)}
+.cusec{display:grid;gap:6px}
+.cuchips{display:flex;flex-wrap:wrap;gap:8px}
+.cuchip{border:3px solid #cfd6e2;background:#fff;border-radius:16px;padding:.35em .7em;font:700 1.05em/1.2 inherit;color:#1f2a44;cursor:pointer;min-height:44px;min-width:52px}
+.cuchip.big{font-size:1.5em;min-width:64px;padding:.2em .5em}
+.cuchip.on{background:#5fd27d;border-color:#3aa85a;color:#fff}
+.cuchip small{font-size:.7em;font-weight:600}
+#cuMore summary{cursor:pointer;font-weight:800;padding:6px 0}
+#cuMore[open] summary{margin-bottom:6px}
+#cuNote{min-height:1.2em}
+.menugrid{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}
+.modebtn{min-width:0;white-space:normal;line-height:1.1;padding-left:.5em;padding-right:.5em}
+@media (orientation:landscape) and (max-height:520px){.menugrid{grid-template-columns:repeat(4,minmax(0,1fr))}}
+
 </style>
 <script>
 /* App-modus (PWA): service worker, installatietip en voortgang-brug voor iPad/iPhone. Raakt de spellogica niet. */
@@ -532,6 +562,8 @@ h1.logo img.emb{width:1.15em;height:1.15em;vertical-align:-.18em;margin-right:.0
     <canvas id="menuCar" width="480" height="300" aria-hidden="true"></canvas>
     <div class="menugrid">
       <button class="btn big green span2" id="btnPlay">🏁 Rijden!</button>
+      <button class="btn big pink modebtn" id="btnKleuter" aria-label="Kleuters (groep 1 en 2)"><span class="mico">🧸</span><span>Kleuters</span></button>
+      <button class="btn big blue modebtn" id="btnCustom" aria-label="Zelf kiezen"><span class="mico">🎛️</span><span>Zelf kiezen</span></button>
       <button class="btn big purple" id="btnMap">🗺️ Kaart</button>
       <button class="btn big orange" id="btnDag">⏱️ Dagrecord</button>
       <button class="btn" id="btnGarage">🚗 Garage</button>
@@ -540,6 +572,31 @@ h1.logo img.emb{width:1.15em;height:1.15em;vertical-align:-.18em;margin-right:.0
       <button class="btn" id="btnStory">📖 Verhaal</button>
     </div>
     <button id="btnParent" class="btn small parent-gate" aria-label="Voor ouders: houd 2 seconden ingedrukt"><span class="fill"></span><span>👪 Voor ouders <small>(houd 2 sec. vast)</small></span></button>
+  </div>
+</div>
+
+<!-- KLEUTERS (groep 1-2, los van de hoofdroute) -->
+<div id="scrKleuter" class="overlay sky">
+  <div class="wrap">
+    <div class="topbar"><button class="iconbtn" data-go="scrMenu" aria-label="Terug">🏠</button><div class="title">🧸 🐞 🦆</div><span class="pill">⭐ <b id="klStars">0</b></span></div>
+    <div id="klBox"></div>
+  </div>
+</div>
+<!-- ZELF KIEZEN -->
+<div id="scrCustom" class="overlay sky">
+  <div class="wrap">
+    <div class="topbar"><button class="iconbtn" data-go="scrMenu" aria-label="Terug">⬅️</button><div class="title">🎛️ Zelf kiezen</div></div>
+    <div class="card cucard">
+      <div class="cusec"><b>Sommen</b><div class="cuchips" id="cuOps"></div></div>
+      <div class="cusec"><b>Getallen tot</b><div class="cuchips" id="cuMax"></div></div>
+      <div class="cusec"><b>Moeilijk?</b><div class="cuchips" id="cuDiff"></div></div>
+      <details id="cuMore"><summary>➕ meer</summary>
+        <div class="cusec"><b>Extra</b><div class="cuchips" id="cuExtra"></div></div>
+        <div class="cusec"><b>Tafels</b><div class="cuchips" id="cuTaf"></div></div>
+      </details>
+      <div class="small-note" id="cuNote"></div>
+      <button class="btn big green" id="btnCuGo">🏁 Rijden!</button>
+    </div>
   </div>
 </div>
 
@@ -655,6 +712,7 @@ h1.logo img.emb{width:1.15em;height:1.15em;vertical-align:-.18em;margin-right:.0
       <h2 style="margin:0">Hoi <span id="plName"></span>! 👋</h2>
       <p style="margin:0">Opa Tandwiel wil weten waar jij het beste kunt beginnen. Je krijgt <b>12 sommen</b> (ongeveer 2 minuten). Tik op het goede antwoord. Weet je het niet? Gok maar, dat is helemaal oké!</p>
       <div class="btnrow"><button class="btn big green" id="btnPlStart">🧭 Start de test</button><button class="btn white" id="btnPlSkip">Overslaan – begin bij Lente level 1</button></div>
+      <button class="btn big pink modebtn" id="btnPlKleuter"><span class="mico">🧸</span><span>Kleuter (groep 1-2)? Tellen met plaatjes!</span></button>
     </div>
     <div class="card plcard" id="plRun" style="display:none">
       <div class="small-note" id="plCount"></div>
@@ -1238,10 +1296,11 @@ const SEASONS = [
 ];
 /* sk: vier groepjes nieuwe vaardigheden per wereld; groep = 'schatting' van het passende leerjaar; cito = vergelijkbaar functioneringsniveau (schatting) */
 const WORLDS = [
-  { s: 0, name: 'Tel-tuin', icon: '🐞', groep: 'groep 1-2', cito: 'groep 2', sk: [['tel5'], ['na10'], ['tel10'], ['meer10']], len: 8, T: [13, 8, 16] },
-  { s: 0, name: 'Splits-sloot', icon: '🦆', groep: 'groep 2-3', cito: 'B3', sk: [['splits5'], ['plus5'], ['splits10'], ['plus10', 'min10']], len: 10, T: [12, 7, 15] },
-  { s: 0, name: 'Bruggetje', icon: '🌉', groep: 'groep 3', cito: 'M3', sk: [['dubbel'], ['plus20', 'min20'], ['plus20x'], ['min20x']], len: 12, T: [9, 4.5, 12] },
-  { s: 0, name: 'Klokkentoren', icon: '🕰️', groep: 'groep 3-4', cito: 'E3', sk: [['klokuur'], ['klokhalf'], ['geld1'], ['na20', 'tel20']], len: 12, T: [11, 6, 14] },
+  /* v2.5: de hoofdroute begint op groep-3-niveau; Lente = groep 3-4 verdeeld over 4 werelden (groep 1-2 = aparte Kleuter-modus, zie KWORLDS) */
+  { s: 0, name: 'Splits-sloot', icon: '🦆', art: 'icon_w1', groep: 'groep 3', cito: 'B3', sk: [['splits10'], ['plus10', 'min10'], ['dubbel'], ['na20', 'tel20']], len: 10, T: [12, 7, 15] },
+  { s: 0, name: 'Bruggetje', icon: '🌉', art: 'icon_w2', groep: 'groep 3', cito: 'M3', sk: [['plus20', 'min20'], ['plus20x'], ['min20x'], ['plus20x', 'min20x']], len: 12, T: [9, 4.5, 12] },
+  { s: 0, name: 'Tulpentuin', icon: '🌷', art: 'icon_w0', groep: 'groep 3', cito: 'E3', sk: [['klokuur'], ['geld1'], ['tien'], ['klokhalf']], len: 12, T: [11, 6, 14] },
+  { s: 0, name: 'Klokkentoren', icon: '🕰️', art: 'icon_w3', groep: 'groep 3-4', cito: 'E3', sk: [['klokhalf'], ['plus100e', 'min100e'], ['tienerbij'], ['klokuur', 'geld1']], len: 12, T: [11, 6, 14] },
   { s: 1, name: 'Honderd-haven', icon: '⚓', groep: 'groep 4', cito: 'M4', sk: [['tien'], ['plus100e', 'min100e'], ['tienerbij'], ['plus100x', 'min100x']], len: 12, T: [10, 5, 13] },
   { s: 1, name: 'Tafelstrand', icon: '🏖️', groep: 'groep 4', cito: 'E4', sk: [['tafA'], ['tafB'], ['tafAB'], ['meer100']], len: 12, T: [8.5, 4, 11] },
   { s: 1, name: 'IJskraam', icon: '🍦', groep: 'groep 4-5', cito: 'M5', sk: [['geld2'], ['kwartier'], ['half'], ['terug']], len: 12, T: [12, 7, 15] },
@@ -1255,9 +1314,19 @@ const WORLDS = [
   { s: 3, name: 'Verhoudings-gletsjer', icon: '🧊', groep: 'groep 7-8', cito: 'M8', sk: [['verh'], ['prijskilo'], ['schaal'], ['tijdsduur']], len: 12, T: [14, 8, 18] },
   { s: 3, name: 'Noorderlicht-finale', icon: '🌌', groep: 'groep 8', cito: 'E8 (1F/1S)', sk: [['volgorde'], ['gemiddelde'], ['meten2'], ['context']], len: 12, T: [14, 8, 18] },
 ];
-WORLDS.forEach((w, i) => { w.id = i; w.wi = i % 4; w.boss = w.wi === 3 ? SEASONS[w.s].boss : 'chaos'; });
+const NW = WORLDS.length; // 16 werelden in de hoofdroute
+/* Kleuter-modus (groep 1-2): eigen werelden en levels, achter de hoofdroute (ids 16-17 / levels 144-161); alleen plaatjes */
+const KWORLDS = [
+  { s: 0, name: 'Tel-tuin', icon: '🐞', art: 'icon_w0', groep: 'groep 1-2', cito: 'groep 2', sk: [['tel5'], ['na10'], ['tel10'], ['meer10']], len: 8, T: [13, 8, 16], kl: 1 },
+  { s: 0, name: 'Splits-sloot', icon: '🦆', art: 'icon_w1', groep: 'groep 2', cito: 'groep 2', sk: [['splits5'], ['plus5'], ['splits10'], ['plus10', 'min10']], len: 10, T: [12, 7, 15], kl: 1 },
+];
+WORLDS.push(...KWORLDS);
+WORLDS.forEach((w, i) => { w.id = i; w.wi = i % 4; w.boss = w.wi === 3 && !w.kl ? SEASONS[w.s].boss : 'chaos'; });
+for (let i = 0; i < NW; i++) if (!WORLDS[i].art) WORLDS[i].art = 'icon_w' + i;
+const MAINW = WORLDS.slice(0, NW);
 const LPW = 9; // levels per wereld (8 + eindbaas)
-const NLEV = WORLDS.length * LPW;
+const NLEV = NW * LPW;          // 144 levels in de hoofdroute
+const KLEV0 = NLEV, KLEVN = KWORLDS.length * LPW; // kleuter-levels 144..161
 /* level-opbouw binnen een wereld (g = groepjes 0..3):
    1-3 introductie (rustig), 4-6 oefenen, 7-8 mixen met de vorige wereld en sneller, 9 = eindbaas */
 const LEVEL_PLAN = [
@@ -1270,13 +1339,14 @@ const LEVELS = [];
 for (const w of WORLDS) for (let l = 0; l < LPW; l++) {
   const P = LEVEL_PLAN[l], mix = [];
   for (const [g, wt] of P.g) {
-    if (g === 'prev') { if (w.id > 0) { const pw = WORLDS[w.id - 1]; const all = pw.sk.flat(); all.forEach(s => mix.push([s, wt / all.length])); } continue; }
+    if (g === 'prev') { if (w.id > 0 && w.id !== NW) { const pw = WORLDS[w.id - 1]; const all = pw.sk.flat(); all.forEach(s => mix.push([s, wt / all.length])); } continue; }
     w.sk[g].forEach(s => mix.push([s, wt / w.sk[g].length]));
   }
   const T0 = w.T[0] * (1 - P.sp * .35);
   LEVELS.push({ id: w.id * LPW + l, w: w.id, s: w.s, l, boss: !!P.boss, mix, len: P.boss ? w.len + 4 : w.len,
     T: [+T0.toFixed(2), w.T[1], w.T[2]], name: P.boss ? 'Eindbaas' : `Level ${l + 1}` });
 }
+const isKl = lv => !!(lv && WORLDS[lv.w].kl);
 const worldSkills = w => WORLDS[w].sk.flat();
 const levelOf = (w, l) => LEVELS[w * LPW + l];
 
@@ -1357,9 +1427,9 @@ const STORY = {
     ['chaos', 'pim', 'l', 'MWAHAHA! Ik ben Graaf Chaos! Ik heb de vier Seizoenskristallen gestolen. Rekenen is veel te netjes!'],
     ['opa', 'player', 'l', 'Zonder kristallen raken de seizoenen in de war. Alleen een snelle rekenracer kan ze terugwinnen…'],
     ['opa', 'player', 'r', 'Dat ben ik! Gas erop! 🏁'] ] },
-  w0: { s: 0, title: 'Tel-tuin', p: [['pim', 'opa', 'l', 'Help! Chaos heeft alle lieveheersbeestjes door elkaar gehusseld. Hoeveel stippen zijn er nou?'], ['pim', 'opa', 'r', 'Tellen, Pim. Gewoon tellen. Met je vingers, niet met je neus.']] },
-  w1: { s: 0, title: 'Splits-sloot', p: [['pim', 'opa', 'l', 'De eendjes zijn gesplitst! Vijf eendjes: twee hier, en… hoeveel daar?'], ['opa', 'pim', 'l', 'Kwak-tisch rekenen, {naam}! Splits ze maar.']] },
-  w2: { s: 0, title: 'Bruggetje', p: [['chaos', 'pim', 'l', 'Ik heb het bruggetje van 10 opgeblazen! Nu kom je nooit over de 10!'], ['opa', 'player', 'r', 'Dan bouw ik er zelf een: 8 + 7 = 8 + 2 + 5!']] },
+  w0: { s: 0, title: 'Splits-sloot', p: [['pim', 'opa', 'l', 'De eendjes zijn gesplitst! Vijf eendjes: twee hier, en… hoeveel daar?'], ['opa', 'pim', 'l', 'Kwak-tisch rekenen, {naam}! Splits ze maar.']] },
+  w1: { s: 0, title: 'Bruggetje', p: [['chaos', 'pim', 'l', 'Ik heb het bruggetje van 10 opgeblazen! Nu kom je nooit over de 10!'], ['opa', 'player', 'r', 'Dan bouw ik er zelf een: 8 + 7 = 8 + 2 + 5!']] },
+  w2: { s: 0, title: 'Tulpentuin', p: [['pim', 'opa', 'l', 'Chaos heeft de klok van de tulpentuin verdraaid! Hoe laat moeten de bloemen open?'], ['opa', 'player', 'r', 'Hele uren, halve uren, en tientallen tellen. Kom op, {naam}!']] },
   w3: { s: 0, title: 'Klokkentoren', p: [['opa', 'pim', 'r', 'Hoe laat is het? Ik zie twee wijzers en drie Opa\'s…'], ['kikker', 'pim', 'l', 'KWAAK! Ik ben de Kikkerkoning. Chaos gaf mij het Lentekristal. Versla mij als je durft. Kwaak kwaak!']] },
   b0: { s: 0, title: 'Het Lentekristal', p: [['kikker', 'player', 'l', 'Kwaak… je bent snel. Hier, het Lentekristal. De tulpen mogen weer rechtop.'], ['opa', 'pim', 'r', 'Joepie! Op naar de zomer! Wie heeft mijn zonnebril? O, die zit op mijn neus.']] },
   w4: { s: 1, title: 'Honderd-haven', p: [['pim', 'opa', 'l', 'Chaos heeft alle boten genummerd tot 100… en de nummers omgedraaid!'], ['opa', 'player', 'l', 'Met tientallen springen, {naam}. Dan vaar je zo de haven in.']] },
@@ -1402,6 +1472,61 @@ const STORY_PICS = {
 /* gegenereerd door tools/art.py uit Grogs bubbles.json: panelen [x,y,w,h], ballonnen [paneel,x,y,w,h,tekst], lege vlakken [paneel,x,y,w,h] (1792-breed) */
 const STRIPS = {"strip_01": {"p": [[0, 0, 588, 1008], [597, 0, 597, 1008], [1202, 0, 590, 1008]], "b": [[0, 65, 18, 410, 275, "Opa: Waar zijn de vier seizoenskristallen gebleven?!"], [1, 622, 20, 321, 214, "Graaf Chaos: Haha! Rekenen is véél te netjes!"], [2, 1230, 21, 408, 284, "Opa: Achter hem aan! Dat wordt een wiel-goede race!"]], "e": [[0, 44, 805, 481, 188], [1, 629, 822, 500, 173], [2, 1238, 800, 535, 196]]}, "strip_02": {"p": [[0, 0, 590, 1008], [597, 0, 596, 1008], [1200, 0, 592, 1008]], "b": [[0, 268, 184, 301, 239, "Pim: Kijk, de bloemen staan op hun kop!"], [1, 875, 196, 293, 230, "Pim: Chaos heeft alle tellen verstopt."], [2, 1456, 195, 298, 230, "Pim: Tel mee, dan komt alles weer goed!"]], "e": []}, "strip_03": {"p": [[1, 5, 588, 878], [598, 5, 594, 878], [1200, 5, 590, 878]], "b": [[0, 63, 34, 467, 311, "Kikkerkoning: Halt! Halt! Wie hier wil langs, wil langs..."], [1, 620, 24, 541, 375, "Kikkerkoning: ...moet dubbel rekenen, dubbel rekenen!"], [2, 1238, 47, 410, 305, "Speler: Dubbel? Dat kan ik dubbel en dwars!"]], "e": []}, "strip_04": {"p": [[4, 10, 583, 988], [597, 10, 594, 988], [1200, 10, 587, 988]], "b": [[0, 250, 57, 290, 226, "Kikkerkoning: Knap, knap! Hier is het lentekristal."], [1, 797, 63, 312, 232, "Speler: Eén terug, nog drie te gaan!"], [2, 1264, 57, 309, 220, "Graaf Chaos: Grr... op naar de zomer dan!"]], "e": [[0, 8, 882, 321, 115], [1, 601, 882, 308, 115]]}, "strip_05": {"p": [[0, 8, 590, 991], [601, 7, 590, 992], [1203, 7, 585, 992]], "b": [[0, 274, 43, 284, 230, "Pim: De ijskraam rekent veel te veel!"], [1, 726, 39, 374, 258, "Pim: En de tafels smelten als ijsjes..."], [2, 1300, 48, 319, 241, "Speler: Tijd om het weer eerlijk uit te rekenen!"]], "e": []}, "strip_06": {"p": [[0, 4, 589, 998], [597, 4, 596, 998], [1201, 4, 591, 998]], "b": [[0, 19, 23, 326, 312, "Vulkaan-Victor: Wie durft mijn eiland op te rijden?"], [1, 848, 27, 316, 211, "Vulkaan-Victor: Vang mijn tafelsommen maar!"], [2, 1459, 29, 311, 252, "Speler: Zes keer warm, zeven keer heet, ik weet het!"]], "e": []}, "strip_07": {"p": [[0, 0, 586, 1008], [594, 0, 600, 1008], [1202, 0, 590, 1008]], "b": [[0, 216, 30, 346, 285, "Vulkaan-Victor: Pff, jij bent cooler dan ik."], [1, 695, 31, 446, 299, "Vulkaan-Victor: Hier, het zomerkristal."], [2, 1315, 32, 438, 303, "Opa: Dat was een heet-e overwinning!"]], "e": []}, "strip_08": {"p": [[1, 1, 589, 1005], [598, 1, 595, 1005], [1200, 0, 588, 1006]], "b": [[0, 182, 29, 379, 239, "Graaf Chaos: Wind, blaas alles in stukjes!"], [1, 673, 33, 453, 265, "Pim: Help, de taart waait uit elkaar!"], [2, 1318, 85, 346, 239, "Speler: Ik vang de stukjes wel op!"]], "e": []}, "strip_09": {"p": [[4, 78, 583, 844], [597, 78, 595, 844], [1202, 79, 585, 843]], "b": [[0, 50, 116, 339, 228, "Egel-ridder: Geen doorgang zonder de juiste breuk!"], [1, 689, 118, 391, 270, "Egel-ridder: En garde!"], [2, 1408, 122, 329, 240, "Pim: Een half bos vol prikkels... jij kunt het!"]], "e": []}, "strip_10": {"p": [[2, 8, 584, 932], [597, 8, 595, 932], [1202, 8, 586, 932]], "b": [[0, 257, 105, 307, 246, "Egel-ridder: Oei, ik zie alles in vieren..."], [1, 853, 118, 312, 261, "Egel-ridder: Je verdient het herfstkristal."], [2, 1240, 113, 323, 259, "Speler: Nog één! Op naar de winter!"]], "e": []}, "strip_11": {"p": [[5, 10, 584, 988], [600, 9, 591, 988], [1201, 9, 585, 988]], "b": [[0, 57, 37, 439, 283, "Pim: Brrr, het is ijskoud!"], [1, 731, 31, 425, 276, "Opa: Sneeuwkettingen erom, dan ga je glad... eh, goed!"], [2, 1237, 38, 410, 275, "Speler: Op naar het noorderlicht!"]], "e": []}, "strip_12": {"p": [[0, 0, 586, 1008], [595, 0, 601, 1008], [1205, 0, 587, 1008]], "b": [[0, 293, 65, 273, 236, "Uil Komma: Hoe-hoe? Waar hoort die komma nou?"], [1, 910, 75, 265, 226, "Uil Komma: Ik ben helemaal in de war!"], [2, 1422, 80, 294, 227, "Speler: Zullen we het samen uitzoeken?"]], "e": []}, "strip_13": {"p": [[1, 4, 588, 997], [599, 4, 589, 997], [1199, 4, 589, 997]], "b": [[0, 100, 57, 405, 299, "Uil Komma: Ah, nu snap ik het weer!"], [1, 707, 57, 408, 297, "Uil Komma: Het winterkristal was nooit van Chaos."], [2, 1330, 59, 396, 298, "Uil Komma: Ik vlieg mee als vriend!"]], "e": [[0, 5, 827, 580, 171], [1, 603, 827, 581, 170]]}, "strip_14": {"p": [[0, 3, 588, 998], [597, 3, 595, 998], [1201, 3, 586, 998]], "b": [[0, 36, 72, 359, 284, "Graaf Chaos: Laatste race! Winnen doe ik altijd!"], [1, 774, 91, 329, 287, "Graaf Chaos: Ik gooi alles door elkaar!"], [2, 1461, 96, 295, 251, "Speler: Maar ik reken alles weer recht!"]], "e": []}, "strip_15": {"p": [[1, 4, 586, 998], [597, 4, 595, 998], [1203, 4, 584, 998]], "b": [[0, 179, 132, 304, 223, "Graaf Chaos: Niemand wilde ooit met mij rekenen..."], [1, 749, 125, 313, 226, "Graaf Chaos: Daarom maakte ik er maar een rommeltje van."], [2, 1413, 143, 268, 192, "Speler: Dan rekenen we voortaan samen!"]], "e": []}, "strip_16": {"p": [[4, 8, 579, 981], [593, 8, 591, 981], [1195, 8, 593, 980]], "b": [[0, 48, 38, 478, 249, "Opa: Elk seizoen heeft zijn kleur terug!"], [1, 638, 38, 478, 247, "Graaf Chaos: Mag ik morgen weer meeracen?"], [2, 1231, 38, 491, 246, "Iedereen: Natuurlijk! Hoera!"]], "e": []}};
 
+/* ---- engine/custom.js ---- */
+/* ===== Zelf kiezen: eigen training (geen verhaal, geen voortgang, minder munten) =====
+   spec = { ops: ['add','sub','mul','div'] | [], max: 10|20|100|1000|10000|0, diff: 'mak'|'nor'|'moe'|'', ex: ['breuk','komma','pct','klok','geld'], taf: [2..10] }
+   Leeg veld = 'maakt niet uit' (willekeurig binnen een redelijk bereik). */
+const CU_OPS = [['add', '➕'], ['sub', '➖'], ['mul', '✖️'], ['div', '➗']];
+const CU_MAX = [10, 20, 100, 1000, 10000];
+const CU_DIFF = [['mak', '🙂'], ['nor', '😎'], ['moe', '🔥']];
+const CU_EX = [['breuk', '🥧', 'breuken'], ['komma', '🔸', 'komma'], ['pct', '%', 'procent'], ['klok', '🕒', 'klok'], ['geld', '💶', 'geld']];
+const CU_EXSK = {
+  breuk: { mak: ['half', 'bdeel'], nor: ['bdeel', 'bvan'], moe: ['bvgl', 'bgel', 'bvan'] },
+  komma: { mak: ['kommageld', 'komma1'], nor: ['komma1', 'komma10'], moe: ['komma10', 'bkomma'] },
+  pct: { mak: ['pct1'], nor: ['pct1', 'pct2'], moe: ['pct2', 'pbreuk'] },
+  klok: { mak: ['klokuur', 'klokhalf'], nor: ['kwartier', 'klok5'], moe: ['klok5', 'digitaal'] },
+  geld: { mak: ['geld1'], nor: ['geld2', 'terug'], moe: ['terug', 'kommageld'] },
+};
+const cuDefault = () => ({ ops: ['add', 'sub'], max: 20, diff: '', ex: [], taf: [] });
+/* één som binnen het gekozen bereik */
+function cuGen(op, spec) {
+  const diff = spec.diff || pickOne(['mak', 'nor', 'nor', 'moe']);
+  const max = spec.max || pickOne(op === 'mul' || op === 'div' ? [100, 100, 1000] : [20, 100, 100, 1000]);
+  const lo = diff === 'mak' ? 0 : diff === 'moe' ? .5 : .15;   // hoe groot de getallen ongeveer zijn (deel van max)
+  const big = () => Math.max(2, ri(Math.ceil(max * lo) || 1, max));
+  const carryA = (a, b) => { for (let p = 1; p < max; p *= 10) if (Math.floor(a / p) % 10 + Math.floor(b / p) % 10 >= 10) return true; return false; };
+  const borrowS = (a, b) => { for (let p = 1; p < max; p *= 10) if (Math.floor(a / p) % 10 < Math.floor(b / p) % 10) return true; return false; };
+  if (op === 'add' || op === 'sub') {
+    for (let g = 0; g < 60; g++) {
+      const s = big(), a = ri(1, s - 1), b = s - a;
+      if (op === 'add') { const c = carryA(a, b); if (max > 10 && ((diff === 'mak' && c) || (diff === 'moe' && !c))) continue; return `add:${a}:${b}`; }
+      const c = borrowS(s, b); if (max > 10 && ((diff === 'mak' && c) || (diff === 'moe' && !c))) continue; return `sub:${s}:${b}`;
+    }
+    const a = ri(1, Math.max(1, max - 1)); return op === 'add' ? `add:${a}:${ri(1, Math.max(1, max - a))}` : `sub:${max}:${ri(1, max - 1)}`;
+  }
+  // × en : — tafels-focus gaat voor; anders volgt het bereik de grootte
+  let a, b;
+  const taf = spec.taf && spec.taf.length ? spec.taf : null;
+  if (taf) { a = pickOne(taf); b = diff === 'mak' ? pickOne([1, 2, 3, 4, 5, 10]) : ri(1, 10); }
+  else if (max <= 20) { for (let g = 0; g < 50; g++) { a = ri(1, diff === 'mak' ? 5 : 10); b = ri(1, 10); if (a * b <= max) break; } if (a * b > max) { a = 2; b = Math.floor(max / 2); } }
+  else if (max <= 100) { const set = diff === 'mak' ? [1, 2, 5, 10] : diff === 'moe' ? [6, 7, 8, 9] : range(2, 10); a = pickOne(set); b = ri(diff === 'moe' ? 3 : 1, 10); }
+  else if (max <= 1000) { a = diff === 'mak' ? ri(2, 9) * 10 : ri(11, diff === 'moe' ? 99 : 49); b = ri(2, 9); if (a * b > 1000) b = Math.floor(1000 / a); }
+  else { a = diff === 'mak' ? ri(2, 9) * 100 : ri(12, 99); b = diff === 'mak' ? ri(2, 9) : ri(11, diff === 'moe' ? 99 : 30); if (a * b > max) b = Math.max(2, Math.floor(max / a)); }
+  if (op === 'mul') return Math.random() < .5 && !taf ? `mul:${b}:${a}` : `mul:${a}:${b}`;
+  return `div:${a * b}:${a}`;
+}
+/* mix voor de rit: elk gekozen onderdeel een eigen 'skill' */
+function customMix(spec) {
+  const mix = [], diff = spec.diff || 'nor';
+  const ops = spec.ops && spec.ops.length ? spec.ops : (spec.ex && spec.ex.length ? [] : ['add', 'sub', 'mul', 'div']);
+  for (const op of ops) { const id = 'cu_' + op; SK[id] = { id, cat: op === 'add' || op === 'sub' ? 'pm' : 'tafel', name: 'Zelf gekozen', gen: () => cuGen(op, spec) }; mix.push([id, 1]); }
+  for (const e of spec.ex || []) { const l = (CU_EXSK[e] || {})[diff] || []; l.forEach(s => SK[s] && mix.push([s, 1 / l.length])); }
+  if (!mix.length) { SK.cu_add = { id: 'cu_add', cat: 'pm', name: 'Zelf gekozen', gen: () => cuGen('add', spec) }; mix.push(['cu_add', 1]); }
+  return mix;
+}
+function customT(spec) { const t = spec.diff === 'mak' ? [12, 7, 15] : spec.diff === 'moe' ? [9, 4.5, 12] : [10.5, 5.5, 13.5], k = spec.max >= 1000 || (spec.ex || []).length ? 1.3 : 1; return t.map(x => +(x * k).toFixed(2)); }
+const CU_LEN = 15;
+
 /* ---- engine/save.js ---- */
 /* ===== opslag: meerdere profielen, migratie van v1 ===== */
 const LS_KEY = 'rekenrace_v2', LS_V1 = 'rekenrace_v1';
@@ -1409,10 +1534,10 @@ function newProfile(name, av, avc) {
   return { id: 'p' + Date.now().toString(36) + ri(100, 999), name: name || 'Racer', av: av || '🦊', avc: avc || '#4cc3ff', created: Date.now(),
     coins: 0, owned: { veh: ['bliksem'], col: ['geel', 'rood'] }, veh: 'bliksem', col: 'geel', facts: {}, lv: {}, open: 0, placed: null,
     vouchers: 1, clears: 0, stickers: {}, unlockAll: false, focus: [], pace: 'normaal', calm: false, daily: {}, allTime: 0, allTimeDate: null,
-    days: [], rides: 0, seenHint: 0, story: {}, tot: { n: 0, c: 0 }, ghostWins: 0, bestStreak: 0, last: 0, restN: 0, seasonsDone: [], usedVoucher: 0, dagT: 0, words: true, wordsAsked: 0, showStory: true, tutorN: 0 };
+    days: [], rides: 0, seenHint: 0, story: {}, tot: { n: 0, c: 0 }, ghostWins: 0, bestStreak: 0, last: 0, restN: 0, seasonsDone: [], usedVoucher: 0, dagT: 0, words: true, wordsAsked: 0, showStory: true, tutorN: 0, cv: 25, kleuter: false, custom: null };
 }
 function defaultG() { return { v: 2, cur: null, order: [], profiles: {}, muted: false }; }
-function fixProfile(p) { const d = newProfile(); for (const k in d) if (!(k in p)) p[k] = d[k]; if (!p.owned.veh.includes('bliksem')) p.owned.veh.unshift('bliksem'); return p; }
+function fixProfile(p) { const old = !p.cv; const d = newProfile(); for (const k in d) if (!(k in p)) p[k] = d[k]; if (old) migrate25(p); if (!p.owned.veh.includes('bliksem')) p.owned.veh.unshift('bliksem'); return p; }
 /* v1 → v2: sterren/munten/voertuigen/feiten blijven bewaard */
 function classifyOld(a, op, b) {
   if (op === 'x') return TA.includes(a) || TA.includes(b) ? 'tafA' : TB.includes(a) || TB.includes(b) ? 'tafB' : 'tafC';
@@ -1444,8 +1569,23 @@ function migrateV1(o) {
   for (const [old, ws] of map) if (st(old) > 0) for (const w of ws) for (let l = 0; l < LPW; l++) p.lv[w * LPW + l] = { st: Math.min(st(old), 2), cl: 1, plays: 0, pl: 1 };
   const cl = Object.keys(p.lv).map(Number); p.open = cl.length ? Math.min(NLEV - 1, Math.max(...cl) + 1) : 0;
   // levels tussen de overgenomen werelden (bijv. Klokkentoren) staan open, maar zijn nog niet gehaald
-  p.migrated = 1; p.clears = cl.length;
+  p.migrated = 1; p.clears = cl.length; delete p.cv; migrate25(p);
   return p;
+}
+/* v2.4 → v2.5: groep 1-2 (oude werelden 0-1) wordt de Kleuter-modus; Lente begint nu bij groep 3.
+   oud w0,w1 → kleuter (levels 144-161) · oud w2 Bruggetje → nieuw w1 · oud w3 Klokkentoren blijft w3 · w4+ ongewijzigd.
+   Nieuwe werelden (Splits-sloot w0, Tulpentuin w2) gelden als 'gehaald via instap' (0 sterren, pl) als je al verder was. Er gaat niets verloren. */
+function migrate25(p) {
+  const L = p.lv || {}, nl = {}, mapId = id => { const w = Math.floor(id / LPW), l = id % LPW; return w <= 1 ? NLEV + w * LPW + l : w === 2 ? LPW + l : id; };
+  for (const k in L) { const id = +k; if (id >= 0 && id < NLEV) nl[mapId(id)] = L[k]; }
+  const mainCl = Object.keys(nl).map(Number).filter(i => i < NLEV && nl[i].cl), maxCl = mainCl.length ? Math.max(...mainCl) : -1;
+  for (const w of [0, 2]) if (maxCl >= (w + 1) * LPW) for (let l = 0; l < LPW; l++) { const id = w * LPW + l; if (!nl[id]) nl[id] = { st: 0, cl: 1, pl: 1, plays: 0, best: 0 }; }
+  p.lv = nl;
+  const oldOpen = p.open || 0, oo = oldOpen <= 2 * LPW - 1 ? 0 : mapId(oldOpen);
+  p.open = Math.min(NLEV - 1, Math.max(oo, maxCl + 1, 0));
+  const st = p.story || {}; if (st.w1) st.w0 = 1; else delete st.w0; if (st.w2) st.w1 = 1; else delete st.w1; delete st.w2;
+  if (p.placed) { const w = p.placed.world || 0; if (w <= 1) { p.placed.world = 0; if (Object.keys(nl).some(i => +i >= NLEV) && maxCl < 0) p.kleuter = true; } else if (w === 2) p.placed.world = 1; }
+  p.cv = 25; p.migrated25 = 1;
 }
 function loadG() {
   try {
@@ -1474,10 +1614,11 @@ function streakText() { const st = streakOf(P);
 /* levels openen */
 const lvRec = id => P.lv[id] || null;
 const isCleared = id => !!(P.lv[id] && P.lv[id].cl);
-const isOpen = id => id === 0 || P.unlockAll || id <= P.open || isCleared(id - 1) || isCleared(id);
+const isOpen = id => id >= NLEV ? (id === NLEV || P.unlockAll || isCleared(id - 1) || isCleared(id)) : (id === 0 || P.unlockAll || id <= P.open || isCleared(id - 1) || isCleared(id));
 const worldOpen = w => isOpen(w * LPW);
 const seasonOpen = s => worldOpen(s * 4);
 function worldStars(w) { let s = 0; for (let l = 0; l < LPW; l++) s += (P.lv[w * LPW + l] || {}).st || 0; return s; }
+function nextKleuter() { for (let i = NLEV; i < NLEV + KLEVN; i++) if (!isCleared(i) && isOpen(i)) return i; return NLEV + KLEVN - 1; }
 function nextLevel() { for (let i = 0; i < NLEV; i++) if (!isCleared(i) && isOpen(i)) return i; return NLEV - 1; }
 
 /* Leitner (vakjes 0..5, -1 = nieuw) */
@@ -1870,27 +2011,26 @@ if (typeof CDRAW !== 'undefined' && !CDRAW.egel) CDRAW.egel = CDRAW.uil || CDRAW
 function drawVis(c, v, W, H) {
   c.clearRect(0, 0, W, H); if (!v) return;
   const m = Math.min(W, H);
-  if (v.type === 'dots' || v.type === 'split') {
-    const n = v.n, rows = n > 10 ? 2 : 1, per = rows === 2 ? 10 : Math.max(5, n);
-    const cell = Math.min(W / (per + 1.2), H / (rows * 1.25 + .3)), r = cell * .36;
-    for (let i = 0; i < n; i++) {
-      const row = Math.floor(i / per), col = i % per, gap = col >= 5 ? cell * .35 : 0;
-      const x = W / 2 - (per * cell + cell * .35) / 2 + cell * (col + .5) + gap, y = H / 2 - (rows - 1) * cell * .62 + row * cell * 1.25;
+  if (v.type === 'dots' || v.type === 'split') {   // nette rijtjes van 3 (max 4), zoals een dobbelsteen
+    const lay = countLayout(v.n, W * .94, H * .94);
+    lay.pts.forEach(([x, y], i) => { x += W * .03; y += H * .03; const r = lay.r;
       c.fillStyle = v.type === 'split' ? (i < v.a ? '#ff6fb5' : '#d9dfe9') : '#ff5a5f'; circ(c, x, y, r);
       c.fillStyle = 'rgba(255,255,255,.5)'; circ(c, x - r * .3, y - r * .3, r * .3);
-      if (v.type === 'split' && i >= v.a) { c.fillStyle = '#8a93a6'; c.font = `700 ${r * 1.2}px ${FONT}`; c.textAlign = 'center'; c.textBaseline = 'middle'; c.fillText('?', x, y + r * .05); }
-    }
+      if (v.type === 'split' && i >= v.a) { c.fillStyle = '#8a93a6'; c.font = `700 ${r * 1.2}px ${FONT}`; c.textAlign = 'center'; c.textBaseline = 'middle'; c.fillText('?', x, y + r * .05); } });
   } else if (v.type === 'line') { // getallenlijn: 7 8 ?  of  ? 8 9
     const seq = v.dir > 0 ? [v.n - 1, v.n, '?'] : ['?', v.n, v.n + 1], bw = Math.min(W / 3.6, H * .9), gap = bw * .25, x0 = W / 2 - (bw * 3 + gap * 2) / 2;
     seq.forEach((t, i) => { if (t !== '?' && t < 0) return; const x = x0 + i * (bw + gap), y = H / 2 - bw * .45; c.fillStyle = t === '?' ? '#ffd23f' : '#eef6ff'; rr(c, x, y, bw, bw * .9, bw * .2); c.fill();
       c.fillStyle = '#1f2a44'; c.font = `700 ${bw * .55}px ${FONT}`; c.textAlign = 'center'; c.textBaseline = 'middle'; c.fillText(String(t), x + bw / 2, y + bw * .47);
       if (i < 2) { c.fillStyle = '#4cc3ff'; tri(c, x + bw + gap * .2, y + bw * .3, x + bw + gap * .8, y + bw * .45, x + bw + gap * .2, y + bw * .6); } });
-  } else if (v.type === 'apples') { // 3 🍎 + 2 🍎  /  5 🍎 met 2 weggestreept
-    const plus = v.op === 'add', tot = plus ? v.a + v.b : v.a, cell = Math.min(W / (tot + (plus ? 2.2 : 1.2)), H * .8), r = cell * .38; let x = W / 2 - (tot + (plus ? 1 : 0)) * cell / 2 + cell / 2;
-    const apple = (x, y, cross) => { c.fillStyle = '#e8322f'; circ(c, x, y, r); c.fillStyle = 'rgba(255,255,255,.45)'; circ(c, x - r * .35, y - r * .3, r * .25); c.fillStyle = '#6b3a00'; c.fillRect(x - r * .06, y - r * 1.25, r * .12, r * .4); c.fillStyle = '#3ccf6e'; ell(c, x + r * .25, y - r * 1.05, r * .28, r * .14);
+  } else if (v.type === 'apples') { // 3 🍎 + 2 🍎 (twee groepjes in rijtjes)  /  5 🍎 met 2 weggestreept
+    const plus = v.op === 'add';
+    const apple = (x, y, r, cross) => { c.fillStyle = '#e8322f'; circ(c, x, y, r); c.fillStyle = 'rgba(255,255,255,.45)'; circ(c, x - r * .35, y - r * .3, r * .25); c.fillStyle = '#6b3a00'; c.fillRect(x - r * .06, y - r * 1.25, r * .12, r * .4); c.fillStyle = '#3ccf6e'; ell(c, x + r * .25, y - r * 1.05, r * .28, r * .14);
       if (cross) { c.strokeStyle = '#1f2a44'; c.lineWidth = r * .22; c.lineCap = 'round'; c.beginPath(); c.moveTo(x - r, y - r); c.lineTo(x + r, y + r); c.moveTo(x + r, y - r); c.lineTo(x - r, y + r); c.stroke(); } };
-    for (let i = 0; i < tot; i++) { if (plus && i === v.a) { c.fillStyle = '#1f2a44'; c.font = `700 ${cell * .7}px ${FONT}`; c.textAlign = 'center'; c.textBaseline = 'middle'; c.fillText('+', x, H / 2); x += cell; }
-      apple(x, H / 2 + r * .2, !plus && i >= v.a - v.b); x += cell; }
+    if (plus) { const gw = W * .42, la = countLayout(v.a, gw, H * .9), lb = countLayout(v.b, gw, H * .9), r = Math.min(la.r, lb.r);
+      const la2 = countLayout(v.a, gw, H * .9, r), lb2 = countLayout(v.b, gw, H * .9, r);
+      la2.pts.forEach(([x, y]) => apple(x + W * .02, y + H * .07, r * .92)); lb2.pts.forEach(([x, y]) => apple(x + W * .56, y + H * .07, r * .92));
+      c.fillStyle = '#1f2a44'; c.font = `700 ${Math.min(H * .45, W * .1)}px ${FONT}`; c.textAlign = 'center'; c.textBaseline = 'middle'; c.fillText('+', W / 2, H / 2); }
+    else { const la = countLayout(v.a, W * .8, H * .9); la.pts.forEach(([x, y], i) => apple(x + W * .1, y + H * .07, la.r * .92, i >= v.a - v.b)); }
   } else if (v.type === 'clock') {
     const r = m * .46, x = W / 2, y = H / 2;
     c.fillStyle = '#1f5fd1'; circ(c, x, y, r); c.fillStyle = '#fff'; circ(c, x, y, r * .9);
@@ -1937,11 +2077,33 @@ function drawMoney(c, cents, x, y, r) {
   c.fillText(big ? '€' + cents / 100 : cents + 'ct', x, y + 1);
 }
 
-/* stippen-plaatje in een poort (dobbelsteen-achtig, max 10) */
+/* tel-indeling: rijtjes van 3 (een rij van 4 als er anders 1 overblijft), boven 10 in tienvakken (2 × 5).
+   Geeft middelpunten (binnen w×h) en een straal; grote, rustige stippen in plaats van een lange rij. */
+function countRows(n) {
+  if (n <= 4) return [n]; const rows = []; let left = n;
+  while (left > 0) { rows.push(Math.min(3, left)); left -= 3; }
+  if (rows.length > 1 && rows[rows.length - 1] === 1) { rows.pop(); rows[rows.length - 1] = 4; }
+  return rows;
+}
+function countLayout(n, w, h, rFix) {
+  const pts = [];
+  if (n > 10) { // tienvakken naast elkaar: 2 rijen van 5
+    const blocks = Math.ceil(n / 10), cols = blocks * 5 + (blocks - 1) * .6, cell = Math.min(w / cols, h / 2.2), r = rFix || cell * .4;
+    const x0 = w / 2 - cols * cell / 2 + cell / 2, y0 = h / 2 - cell * .55;
+    for (let i = 0; i < n; i++) { const b = Math.floor(i / 10), j = i % 10, row = Math.floor(j / 5), col = j % 5; pts.push([x0 + (b * 5.6 + col) * cell, y0 + row * cell * 1.1]); }
+    return { pts, r };
+  }
+  const rows = countRows(n), mx = Math.max(...rows), cell = Math.min(w / mx, h / rows.length, w * .34), r = rFix || cell * .38;
+  rows.forEach((cnt, ri2) => { const k = rows.slice(0, ri2).reduce((a, b) => a + b, 0);
+    for (let j = 0; j < cnt; j++) pts.push([w / 2 + (j - (cnt - 1) / 2) * cell, h / 2 + (ri2 - (rows.length - 1) / 2) * cell]); });
+  return { pts, r };
+}
+/* stippen in rijtjes als HTML (instaptest-knoppen, tip-kaart) */
+function dotsHTML(n) { return '<span class="cdots">' + countRows(n).map(c => '<span>' + '●'.repeat(c) + '</span>').join('') + '</span>'; }
+/* stippen-plaatje in een poort (dobbelsteen-achtig, rijtjes van 3, max 10) */
 function drawDotPic(c, n, cx, cy, w, h, col) {
-  const per = n <= 5 ? n : Math.ceil(n / 2), rows = n <= 5 ? 1 : 2, cell = Math.min(w / per, h / rows) * .9, r = cell * .36;
-  for (let i = 0; i < n; i++) { const row = rows === 1 ? 0 : Math.floor(i / per), col2 = rows === 1 ? i : i % per, cnt = row === 0 ? Math.min(per, n) : n - per;
-    const x = cx - (cnt - 1) * cell / 2 + col2 * cell, y = cy - (rows - 1) * cell / 2 + row * cell; c.fillStyle = col || '#ff5a5f'; circ(c, x, y, r); }
+  const lay = countLayout(n, w, h); c.fillStyle = col || '#ff5a5f';
+  for (const [x, y] of lay.pts) circ(c, cx - w / 2 + x, cy - h / 2 + y, lay.r);
 }
 
 /* ---- art/scene.js ---- */
@@ -2144,7 +2306,7 @@ function drawGateRow(r) {
   ctx.font = `700 ${fs}px ${FONT}`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
   for (let i = 0; i < 3; i++) {
     const X = i - 1, x = CX + (X - camX) * s, txt = String(r.opts[i]), tw = ctx.measureText(txt).width;
-    const pw = Math.min(s * .97, Math.max(.9 * s, tw + 14)), ph = Math.max(r.dots ? .75 * s : .6 * s, fs * 1.3);
+    const pw = Math.min(s * .97, Math.max(.9 * s, tw + 14)), ph = Math.max(r.dots ? .9 * s : .6 * s, fs * 1.3);
     const yb = g - (.52 + bob) * s, yt = yb - ph;
     ctx.fillStyle = 'rgba(0,0,0,.14)'; ell(ctx, x, g, pw * .45, s * .07);
     const beam = r.golden ? 'rgba(255,214,64,.45)' : 'rgba(255,255,255,.4)';
@@ -2235,7 +2397,7 @@ const DAG_T = [6.5, 3.5, 10];
 const fmtTime = s => { s = Math.max(0, Math.ceil(s)); return Math.floor(s / 60) + ':' + two(s % 60); };
 const effT = () => R.T * (PACE[P.pace] || 1) * ((R.row && R.row.it.tf) || 1);
 function dagMix() {
-  const open = WORLDS.filter(w => worldOpen(w.id)).map(w => w.id); const last = open.slice(-2);
+  const open = MAINW.filter(w => worldOpen(w.id)).map(w => w.id); const last = open.slice(-2);
   const mix = []; for (const w of open) { const wt = last.includes(w) ? 2 : .5; WORLDS[w].sk.flat().forEach(s => mix.push([s, wt])); }
   return mix;
 }
@@ -2247,15 +2409,16 @@ function chooseGhost(levelId, pref) {
 }
 function startRide(mode, levelId, ghostPref) {
   const lv = mode === 'level' ? LEVELS[levelId] : null;
-  const Tb = lv ? lv.T : DAG_T;
+  const cu = mode === 'custom', spec = cu ? (P.custom || cuDefault()) : null;
+  const Tb = lv ? lv.T : cu ? customT(spec) : DAG_T;
   const lr = lv ? (P.lv[lv.id] || {}) : null;
-  const T0 = lv ? (lr.T || Tb[0]) : (P.dagT || Tb[0]);
-  R = { mode, lv, mix: lv ? lv.mix : dagMix(), Tb, T: clamp(T0, Tb[1], Tb[2]),
-    total: lv ? lv.len : Infinity, extra: 0, done: 0, correct: 0, coins: 0, streak: 0, best: 0, score: 0, skips: 0,
+  const T0 = lv ? (lr.T || Tb[0]) : cu ? Tb[0] : (P.dagT || Tb[0]);
+  R = { mode, lv, spec, mix: lv ? lv.mix : cu ? customMix(spec) : dagMix(), Tb, T: clamp(T0, Tb[1], Tb[2]),
+    total: lv ? lv.len : cu ? CU_LEN : Infinity, extra: 0, done: 0, correct: 0, coins: 0, streak: 0, best: 0, score: 0, skips: 0,
     queue: [], recent: [], results: [], before: {}, phase: 'count', countN: 4, countT: 0, clock: 0, gap: .3,
-    row: null, timeLeft: DUUR, reviewP: lv ? (lv.boss ? .4 : .3) : .45, paused: false, finishAt: null,
+    row: null, timeLeft: DUUR, reviewP: lv ? (lv.boss ? .4 : .3) : cu ? .2 : .45, paused: false, finishAt: null,
     lastCL: -1, sameRun: 0, bossHit: 0, bossNeed: lv ? Math.ceil(lv.len * .7) : 0, speedLvl: 0, lastSec: -1, marks: [],
-    ghost: lv ? chooseGhost(lv.id, ghostPref) : null, young: !!(lv && lv.w <= 1), tutor: !!(lv && lv.w <= 1 && (P.tutorN || 0) < 3), fastN: 0, ghostState: null, bonusSeason: lv && lv.s === realSeason() };
+    ghost: lv ? chooseGhost(lv.id, ghostPref) : null, young: isKl(lv), tutor: !!(isKl(lv) && (P.tutorN || 0) < 3), fastN: 0, ghostState: null, bonusSeason: !!(lv && lv.s === realSeason()) };
   R.speedLvl = speedLevel();
   if (R.tutor) { P.tutorN = (P.tutorN || 0) + 1; }
   lastRide = { mode, levelId, ghostPref };
@@ -2267,7 +2430,7 @@ function startRide(mode, levelId, ghostPref) {
   $('#bossRow').classList.toggle('on', !!(lv && lv.boss));
   if (lv && lv.boss) $('#bossName').textContent = (lv.w % 4 === 3 ? SEASONS[lv.s].bossName : 'Graaf Chaos');
   $('#tipCard').classList.remove('show');
-  $('#sumCard').className = ''; setSumText(lv ? `${WORLDS[lv.w].name} · ${lv.name}` : '1 minuut!'); showVis(null);
+  $('#sumCard').className = ''; setSumText(lv ? (isKl(lv) ? '🧸 ' + WORLDS[lv.w].icon + ' ' + (lv.l + 1) : `${WORLDS[lv.w].name} · ${lv.name}`) : cu ? '🎛️ ' + CU_LEN : '1 minuut!'); showVis(null);
   show('game'); layout(); spawnDecor(dist + ZFAR);
   $('#swipeHint').textContent = R.young ? '👈 👉  ⬆️' : '👈 👉 sturen · ⬆️ of ✋ vasthouden = versnellen'; $('#swipeHint').classList.toggle('show', (P.seenHint || 0) < 3 && !R.tutor);
   updateHud();
@@ -2302,10 +2465,10 @@ function updateHud() {
   $('#hudCoins').textContent = P.coins; $('#hudStreak').textContent = R.streak; $('#pillStreak').classList.toggle('hot', R.streak >= 3);
   $('#hudScore').textContent = R.score;
   const vb = $('#btnVoucher'); vb.style.display = R.mode === 'level' && P.vouchers > 0 ? '' : 'none'; $('#vCount').textContent = P.vouchers;
-  if (R.mode === 'level') {
+  if (R.mode === 'level' || R.mode === 'custom') {
     $('#progFill').style.width = (R.done / R.total * 100) + '%'; $('#progFill').style.background = '';
     $('#progText').textContent = `${R.done}/${R.total}`;
-    if (R.lv.boss) $('#bossFill').style.width = Math.max(0, 100 - R.correct / R.bossNeed * 100) + '%';
+    if (R.lv && R.lv.boss) $('#bossFill').style.width = Math.max(0, 100 - R.correct / R.bossNeed * 100) + '%';
   } else updateTimer(true);
   updateGhostPill();
 }
@@ -2358,6 +2521,7 @@ function resolve(row) {
     let coins = row.golden ? 4 : 2; const combo = R.streak % 5 === 0, quick = rt <= fast * .5;
     if (quick) { coins += 1; R.fastN++; }
     if (combo) coins += 3; if (R.bonusSeason) coins += 1;
+    if (R.mode === 'custom') coins = Math.max(1, Math.round(coins * .4));   // zelf kiezen: minder munten
     P.coins += coins; R.coins += coins;
     if (R.mode === 'dag') R.score += 1 + (combo ? 2 : 0);
     boostT = .8; R.bossHit = .5;
@@ -2374,13 +2538,13 @@ function resolve(row) {
     const last3 = R.results.slice(-3).filter(r => !r.ok).length;
     R.T *= last3 >= 2 ? 1.17 : 1.11;
     R.queue = R.queue.filter(q => q.k !== it.k);
-    if (R.mode === 'level') { const remaining = R.total - R.done;
+    if (R.mode === 'level' || R.mode === 'custom') { const remaining = R.total - R.done;
       if (remaining <= 0) { if (R.extra < 3) { R.total++; R.extra++; R.queue.push({ k: it.k, s: row.s, due: R.done }); } }
       else R.queue.push({ k: it.k, s: row.s, due: R.done + Math.min(3, remaining - 1) }); }
     else R.queue.push({ k: it.k, s: row.s, due: R.done + 3 });
     const qq = qShow(it, R.young); $('#sumCard').className = 'bad' + (it.vis ? ' hasvis' : ''); setSumText(qq || '');
     $('#tipHead').textContent = `${pickOne(OOPS)} Jij koos ${row.opts[row.chosen]}.`;
-    $('#tipSum').textContent = R.young ? (it.dotGates || /^\d+$/.test(it.ans) && +it.ans <= 10 ? '●'.repeat(+it.ans) + '  ' + it.ans : it.ans) : qq.length > 22 ? `Antwoord: ${it.ans}` : `${qq} = ${it.ans}`;
+    $('#tipSum').innerHTML = R.young ? (it.dotGates || /^\d+$/.test(it.ans) && +it.ans <= 10 ? dotsHTML(+it.ans) + ' <b class="tipn">' + esc(it.ans) + '</b>' : esc(it.ans)) : esc( qq.length > 22 ? `Antwoord: ${it.ans}` : `${qq} = ${it.ans}`);
     $('#tipText').textContent = R.young ? '' : '💡 ' + it.tip; $('#tipCard').classList.toggle('young', R.young); if (R.young) $('#tipHead').textContent = '🙂 👉';
     $('#tipCard').classList.add('show');
     R.gap = (R.young ? 1.6 : R.mode === 'dag' ? 1.5 : 2.2) / SNEL * (!R.young && it.tip.length > 70 ? 1.3 : 1);
@@ -2393,7 +2557,7 @@ function resolve(row) {
   updateHud(); save();
 }
 function checkFinish(ok) {
-  if (R.mode === 'level' && R.done >= R.total) {
+  if ((R.mode === 'level' || R.mode === 'custom') && R.done >= R.total) {
     if (R.queue.some(q => q.skip)) { R.total++; R.queue.forEach(q => { if (q.skip) q.due = Math.min(q.due, R.done); }); return; }
     if (R.queue.length && R.extra < 3) { R.total++; R.extra++; }
     else R.finishAt = R.clock + (ok ? .6 : 1.8) / SNEL;
@@ -2435,7 +2599,7 @@ function update(dt) {
     else row.z -= (row.committed ? Math.max(vGate * 6, 14 * SNEL) : vGate * (row.turbo ? 3.5 : 1)) * dt;
     row.age += dt; if (row.z <= ZP) resolve(row);
   }
-  else if (R.finishAt != null) { if (R.clock >= R.finishAt) { finishLevel(); return; } }
+  else if (R.finishAt != null) { if (R.clock >= R.finishAt) { R.mode === 'custom' ? finishCustom() : finishLevel(); return; } }
   else { R.gap -= dt; if (R.gap <= 0) spawnNext(); }
   for (const r of rows) if (r.resolved) r.z -= (vGate + VS * .5) * dt;
   rows = rows.filter(r => r.z > ZNEAR * .8);
@@ -2503,14 +2667,14 @@ function finishLevel() {
   rec.T = +clamp(R.T * 1.05, R.Tb[1], R.Tb[2]).toFixed(2);
   const info = { id: lv.id, stars, pct, cleared, bossWin, newBest, banners: [], storyB: null, nextOpen: false };
   if (firstClear) {
-    P.clears++; P.open = Math.max(P.open, Math.min(NLEV - 1, lv.id + 1)); info.nextOpen = lv.id + 1 < NLEV;
+    P.clears++; if (!isKl(lv)) { P.open = Math.max(P.open, Math.min(NLEV - 1, lv.id + 1)); info.nextOpen = lv.id + 1 < NLEV; } else info.nextOpen = lv.id + 1 < NLEV + KLEVN;
     if (P.clears % 3 === 0) { if (P.vouchers < 3) { P.vouchers++; info.banners.push('🎟️ Je kreeg een <b>Sla-deze-som-over-bon</b>! Tik hem aan tijdens een rit.'); } }
-    if (lv.boss && lv.w % 4 === 3 && !P.seasonsDone.includes(lv.s)) {
+    if (lv.boss && !isKl(lv) && lv.w % 4 === 3 && !P.seasonsDone.includes(lv.s)) {
       P.seasonsDone.push(lv.s); const v = VEHICLES.find(x => x.s === lv.s && x.how === 'boss');
       if (v && !P.owned.veh.includes(v.id)) { P.owned.veh.push(v.id); info.banners.push(`🏆 Nieuw voertuig gewonnen: <b>${v.name}</b>! Kijk in de garage.`); }
       info.banners.push(`${aimg('ui_kristal_' + SEASONS[lv.s].key, SEASONS[lv.s].icon, 'kri')} Je hebt het <b>${SEASONS[lv.s].name}kristal</b> terug!`); info.storyB = 'b' + lv.s;
     }
-    if (lv.l === LPW - 1 && lv.w + 1 < WORLDS.length && WORLDS[lv.w + 1].s !== lv.s) info.banners.push(`${SEASONS[lv.s + 1].icon} Een nieuw seizoen gaat open: <b>${SEASONS[lv.s + 1].name}</b>!`);
+    if (lv.l === LPW - 1 && lv.w + 1 < NW && WORLDS[lv.w + 1].s !== lv.s) info.banners.push(`${SEASONS[lv.s + 1].icon} Een nieuw seizoen gaat open: <b>${SEASONS[lv.s + 1].name}</b>!`);
   }
   if (lv.boss) info.banners.push(bossWin ? `👹 Je hebt ${lv.w % 4 === 3 ? SEASONS[lv.s].bossName : 'Graaf Chaos'} verslagen!` : `👹 De eindbaas heeft nog energie. Nog ${R.bossNeed - R.correct} goede antwoorden nodig!`);
   // spook
@@ -2540,12 +2704,13 @@ function renderEnd(info) {
   if (info.newBest && info.stars > 0 && !info.banners.length) b += `<div class="banner">⭐ Nieuw sterrenrecord in dit level!</div>`;
   for (const s of info.stickers || []) b += `<div class="banner purple">🏷️ Nieuwe sticker: <b>${esc(s)}</b></div>`;
   $('#endBanners').innerHTML = b;
-  const last = info.id === NLEV - 1 && info.cleared;
-  $('#btnNext').textContent = last ? '🎉 Het einde van het verhaal' : info.cleared ? '➡️ Volgende level' : '🔁 Nog een poging';
-  $('#btnNext').dataset.yi = ''; if (LEVELS[info.id].w <= 1) { $('#endMsg').textContent = `✅ ${R.correct}   ❌ ${R.done - R.correct}`; $('#endWorld').textContent = SEASONS[LEVELS[info.id].s].icon + ' ' + WORLDS[LEVELS[info.id].w].icon + ' ' + (LEVELS[info.id].l + 1); }
+  const kl = isKl(lv), last = (kl ? info.id === NLEV + KLEVN - 1 : info.id === NLEV - 1) && info.cleared;
+  $('#btnNext').textContent = kl ? (last ? '🧸 🏠' : info.cleared ? '▶️' : '🔁') : last ? '🎉 Het einde van het verhaal' : info.cleared ? '➡️ Volgende level' : '🔁 Nog een poging';
+  $('#btnNext').dataset.yi = ''; $('#btnEndMap').dataset.go = kl ? 'scrKleuter' : 'scrMap'; $('#btnEndMap').textContent = kl ? '🧸' : '🗺️ Kaart'; if (kl) { $('#endMsg').textContent = `✅ ${R.correct}   ❌ ${R.done - R.correct}`; $('#endWorld').textContent = SEASONS[LEVELS[info.id].s].icon + ' ' + WORLDS[LEVELS[info.id].w].icon + ' ' + (LEVELS[info.id].l + 1); }
 }
 function goNext() {
-  const info = lastEnd; if (!info) return;
+  const info = lastEnd; if (!info) return; if (info.custom) { show('scrCustom'); return; }
+  if (isKl(LEVELS[info.id])) { const last = info.id >= NLEV + KLEVN - 1 && info.cleared; runRest(() => last ? show('scrKleuter') : playLevel(info.cleared ? info.id + 1 : info.id)); return; }
   const next = info.cleared ? Math.min(NLEV - 1, info.id + 1) : info.id;
   const finale = info.id === NLEV - 1 && info.cleared;
   runRest(() => {
@@ -2559,7 +2724,8 @@ function playLevel(id, ghostPref) {
   const w = LEVELS[id].w, key = 'w' + w;
   const go0 = () => startRide('level', id, ghostPref == null ? defaultGhost(id) : ghostPref);
   const go = () => { if (!P.wordsAsked && WORLDS[w].sk.flat().some(x => WORD_SKILLS.includes(x))) { wordsThen = go0; $('#mdWords').classList.add('show'); } else go0(); };
-  if (!P.story.intro) playStory('intro', () => playStory(key, go));
+  if (WORLDS[w].kl) go();
+  else if (!P.story.intro) playStory('intro', () => playStory(key, go));
   else if (!P.story[key]) playStory(key, go); else go();
 }
 
@@ -2568,7 +2734,7 @@ let REST = null;
 function runRest(done) {
   P.restN = (P.restN || 0) + 1; save();
   const breathe = P.restN % 3 === 0;
-  const lv = lastEnd ? LEVELS[lastEnd.id] : LEVELS[0];
+  const lv = lastEnd && lastEnd.id != null ? LEVELS[lastEnd.id] : { s: realSeason() };
   const anims = REST_ANIM_BY_SEASON[lv.s].filter(k => ART.has('rest_' + k)), type = breathe ? 'adem' : anims.length ? pickOne(anims) : pickOne(REST_BY_SEASON[lv.s]);
   REST = { type, t: 0, dur: (breathe ? 10 : 5) / SNEL, done, s: lv.s };
   $('#restText').textContent = youngNow() ? (breathe ? '🫧 😌' : '☕ 🙂') : (breathe ? 'Even rust. Adem mee met het rondje…' : REST_TXT[type] || REST_ANIM[type]) + (breathe ? '' : ' (tik om verder te gaan)');
@@ -2707,7 +2873,7 @@ function toggleStory() { P.showStory = P.showStory === false; save(); SFX.click(
 
 /* ---- ui/screens.js ---- */
 /* ===== schermen ===== */
-const SCREENS = ['scrProfiles', 'scrNew', 'scrMenu', 'scrMap', 'scrGarage', 'scrStickers', 'scrKaart', 'scrEnd', 'scrDag', 'scrDagEnd', 'scrPlace', 'scrStory', 'scrRest'];
+const SCREENS = ['scrKleuter', 'scrCustom', 'scrProfiles', 'scrNew', 'scrMenu', 'scrMap', 'scrGarage', 'scrStickers', 'scrKaart', 'scrEnd', 'scrDag', 'scrDagEnd', 'scrPlace', 'scrStory', 'scrRest'];
 let curScreen = 'scrMenu';
 function show(id) {
   SCREENS.forEach(s => $('#' + s).classList.toggle('show', s === id)); curScreen = id;
@@ -2741,6 +2907,8 @@ const RENDER = {
     const n = nextLevel(), lv = LEVELS[n]; $('#btnPlay').innerHTML = `🏁 Rijden! <small>${SEASONS[lv.s].icon} ${WORLDS[lv.w].name} · ${lv.name}</small>`;
   },
   scrMap() { renderMap(); },
+  scrKleuter() { renderKleuter(); },
+  scrCustom() { renderCustom(); },
   scrGarage() { renderGarage(); },
   scrStickers() { renderStickers(); },
   scrKaart() { renderKaart(); },
@@ -2767,7 +2935,7 @@ function renderMap() {
   let h = '';
   for (let wi = 0; wi < 4; wi++) {
     const w = WORLDS[mapSeason * 4 + wi], wo = worldOpen(w.id);
-    h += `<section class="wsec ${wo ? '' : 'locked'}"><div class="whead"><span class="wi">${wo ? aimg('icon_w' + w.id, w.icon, 'wico') : '🔒'}</span><span><b>${w.name}</b><br><small>${w.groep} · ${aimg('ui_ster', '⭐')} ${worldStars(w.id)}/27</small></span></div><div class="path">`;
+    h += `<section class="wsec ${wo ? '' : 'locked'}"><div class="whead"><span class="wi">${wo ? aimg(w.art, w.icon, 'wico') : '🔒'}</span><span><b>${w.name}</b><br><small>${w.groep} · ${aimg('ui_ster', '⭐')} ${worldStars(w.id)}/27</small></span></div><div class="path">`;
     for (let l = 0; l < LPW; l++) {
       const lv = levelOf(w.id, l), op = isOpen(lv.id), rec = P.lv[lv.id] || {}, st = rec.pl ? 0 : rec.st || 0, nx = lv.id === nextLevel();
       h += `<button class="node ${op ? '' : 'locked'} ${lv.boss ? 'boss' : ''} ${rec.cl ? 'done' : ''} ${rec.pl ? 'placed' : ''} ${nx ? 'next' : ''}" data-level="${lv.id}" aria-label="${w.name} ${lv.name}" style="--i:${l}">
@@ -2859,9 +3027,9 @@ function cellInfo(k) {
 /* ---------- ouders ---------- */
 function estimate(p) {
   // hoogste wereld die echt beheerst wordt: ≥5 levels gehaald (niet via instaptest) met gem. ≥2 sterren, of ≥80% goed bij ≥15 pogingen
-  const acc = {}; for (const k in p.facts) { const r = p.facts[k]; for (const w of WORLDS) if (w.sk.flat().includes(r.s)) { const a = acc[w.id] || (acc[w.id] = { n: 0, c: 0 }); a.n += r.n; a.c += r.c; } }
+  const acc = {}; for (const k in p.facts) { const r = p.facts[k]; for (const w of MAINW) if (w.sk.flat().includes(r.s)) { const a = acc[w.id] || (acc[w.id] = { n: 0, c: 0 }); a.n += r.n; a.c += r.c; } }
   let best = -1;
-  for (const w of WORLDS) {
+  for (const w of MAINW) {
     let cl = 0, st = 0; for (let l = 0; l < LPW; l++) { const r = p.lv[w.id * LPW + l]; if (r && r.cl && !r.pl) { cl++; st += r.st; } }
     const a = acc[w.id]; if ((cl >= 5 && st / cl >= 2) || (a && a.n >= 15 && a.c / a.n >= .8)) best = w.id;
   }
@@ -2921,7 +3089,8 @@ function finishDag() {
   renderRecords('2'); show('scrDagEnd'); SFX.fanfare(); if (R.score > prevToday) confetti();
 }
 /* ---------- groep 1-2: iconen eerst ---------- */
-function youngNow() { if (!P) return false; if (R && R.lv) return R.lv.w <= 1; if (lastEnd && curScreen === 'scrEnd') return LEVELS[lastEnd.id].w <= 1; return LEVELS[nextLevel()].w <= 1; }
+function youngNow() { if (!P) return false; if (R) return !!R.young; const kE = !!(lastEnd && lastEnd.id != null && isKl(LEVELS[lastEnd.id]));
+  if (curScreen === 'scrKleuter') return true; if (curScreen === 'scrEnd' || curScreen === 'scrRest') return kE; if (curScreen === 'scrMenu') return !!P.kleuter; return false; }
 const YOUNG_ICONS = { btnPlay: '▶️', btnMap: '🗺️', btnDag: '⏱️', btnGarage: '🚗', btnStickers: '🏷️', btnKaart: '⭐', btnStory: '📖', btnNext: '▶️', btnAgain: '🔁', btnResume: '▶️', btnQuit: '🏠', btnStoryNext: '▶️', btnRestSkip: '▶️', btnLvGo: '▶️', btnLvClose: '⬅️', btnPlDone: '▶️', btnEndMap: '🗺️' };
 function applyYoung() {
   const y = youngNow(); document.body.classList.toggle('young', y);
@@ -2935,12 +3104,60 @@ function applyYoung() {
 function aimg(n, fb, cls) { return ART.has(n) ? `<img class="aimg ${cls || ''}" src="assets/${n}.webp" alt="${fb}" draggable="false">` : fb; }
 function artDom() {
   const sw = (sel, n, fb) => document.querySelectorAll(sel).forEach(e => { if (ART.has(n)) e.innerHTML = aimg(n, fb); });
-  sw('#hud .pill > span:first-child', 'ui_munt', '🪙');
+  { const hc = $('#hudCoins'), e = hc && hc.previousElementSibling; if (e && ART.has('ui_munt')) e.innerHTML = aimg('ui_munt', '🪙'); }
   const v = $('#btnVoucher'); if (v && ART.has('ui_skip_voucher')) v.innerHTML = aimg('ui_skip_voucher', '🎟️', 'vimg') + ' Overslaan <b id="vCount">' + (($('#vCount') || {}).textContent || 0) + '</b>';
   document.querySelectorAll('h1.logo .bolt').forEach(e => { if (ART.has('ui_logo_embleem')) e.outerHTML = aimg('ui_logo_embleem', '⚡', 'emb'); });
   if (ART.has('ui_garage')) document.documentElement.classList.add('art-garage');
 }
 artDom();
+
+/* ---------- Kleuter-modus: grote plaatjesknoppen, eigen sterren ---------- */
+function renderKleuter() {
+  let h = '', tot = 0;
+  for (const w of KWORLDS) {
+    h += `<section class="klsec"><div class="klhead">${aimg(w.art, w.icon, 'wico')}</div><div class="klgrid">`;
+    for (let l = 0; l < LPW; l++) { const id = w.id * LPW + l, r = P.lv[id] || {}, op = isOpen(id), st = r.st || 0; tot += st;
+      h += `<button class="klbtn ${op ? '' : 'locked'} ${id === nextKleuter() ? 'next' : ''}" data-kl="${id}" aria-label="Level ${l + 1}">${op ? (l === LPW - 1 ? '👹' : l + 1) : '🔒'}<span class="klst">${'★'.repeat(st)}${'☆'.repeat(3 - st)}</span></button>`; }
+    h += '</div></section>';
+  }
+  $('#klBox').innerHTML = h; $('#klStars').textContent = tot; applyYoung();
+}
+/* ---------- Zelf kiezen ---------- */
+function cuSpec() { if (!P.custom) P.custom = cuDefault(); return P.custom; }
+function cuTap(f, v) {
+  const s = cuSpec(); SFX.click();
+  const tog = (arr, x) => { const i = arr.indexOf(x); i < 0 ? arr.push(x) : arr.splice(i, 1); };
+  if (f === 'ops') v === '' ? (s.ops = []) : tog(s.ops, v);
+  else if (f === 'max') s.max = +v || 0;
+  else if (f === 'diff') s.diff = v;
+  else if (f === 'ex') tog(s.ex, v);
+  else if (f === 'taf') { v === '' ? (s.taf = []) : tog(s.taf, +v); if (s.taf.length && !s.ops.includes('mul') && !s.ops.includes('div')) s.ops.push('mul'); }
+  save(); renderCustom();
+}
+function renderCustom() {
+  const s = cuSpec(), chip = (f, v, lab, on, cls) => `<button class="cuchip ${on ? 'on' : ''} ${cls || ''}" data-cu="${f}" data-v="${v}" aria-pressed="${on}">${lab}</button>`, any = '🎲';
+  $('#cuOps').innerHTML = CU_OPS.map(([v, l]) => chip('ops', v, l, s.ops.includes(v), 'big')).join('') + chip('ops', '', any, !s.ops.length, 'big');
+  $('#cuMax').innerHTML = CU_MAX.map(v => chip('max', v, v.toLocaleString('nl-NL'), s.max === v)).join('') + chip('max', 0, any, !s.max);
+  $('#cuDiff').innerHTML = CU_DIFF.map(([v, l]) => chip('diff', v, l, s.diff === v, 'big')).join('') + chip('diff', '', any, !s.diff, 'big');
+  $('#cuExtra').innerHTML = CU_EX.map(([v, l, n]) => chip('ex', v, `${l} <small>${n}</small>`, s.ex.includes(v))).join('');
+  $('#cuTaf').innerHTML = range(2, 10).map(v => chip('taf', v, '×' + v, s.taf.includes(v))).join('') + chip('taf', '', any, !s.taf.length);
+  if (s.ex.length || s.taf.length) $('#cuMore').open = true;
+  const ex = cuGen((s.ops.length ? s.ops : ['add', 'sub', 'mul', 'div'])[0], s), it = buildItem(ex);
+  $('#cuNote').textContent = s.ops.length || !s.ex.length ? `bijv. ${it.q}` : '';
+}
+function finishCustom() {
+  R.phase = 'end'; P.seenHint = (P.seenHint || 0) + 1; markPracticed(); P.rides++;
+  const stk = checkStickers(); save(); lastEnd = { id: null, custom: true };
+  $('#endTitle').textContent = 'Klaar! 🏁'; $('#endWorld').textContent = '🎛️ Zelf gekozen';
+  const pct = R.done ? R.correct / R.done : 0, st = pct >= .95 ? 3 : pct >= .8 ? 2 : pct >= .6 ? 1 : 0;
+  $('#endStars').innerHTML = [0, 1, 2].map(i => `<span class="${i < st ? 'star-on' : 'star-off'}" style="animation-delay:${.15 + i * .25}s">★</span>`).join('');
+  $('#endMsg').textContent = `✅ ${R.correct}   ❌ ${R.done - R.correct}`;
+  $('#endStats').innerHTML = `<span class="stat gold">${aimg('ui_munt', '🪙')} +${R.coins}</span><span class="stat">🔥 ${R.best}</span>`;
+  const seen = new Set(); $('#endChips').innerHTML = R.results.filter(r => !seen.has(r.k) && seen.add(r.k)).slice(0, 24).map(r => `<span class="chip ${r.ok ? 'ok' : 'bad'}">${esc(r.q.length > 16 ? r.ans : r.q)}</span>`).join('');
+  $('#endBanners').innerHTML = stk.map(s => `<div class="banner purple">🏷️ Nieuwe sticker: <b>${esc(s)}</b></div>`).join('');
+  $('#btnNext').textContent = '🎛️ Andere keuze'; $('#btnEndMap').dataset.go = 'scrMenu'; $('#btnEndMap').textContent = '🏠 Menu';
+  show('scrEnd'); SFX.fanfare(); if (st >= 2) confetti();
+}
 
 /* ---- ui/place.js ---- */
 /* ===== instaptest: 12 adaptieve vragen (~2 min) ===== */
@@ -2955,13 +3172,13 @@ function placeStart() {
   $('#plIntro').style.display = 'none'; $('#plRun').style.display = ''; placeQ();
 }
 function placeQ() {
-  const w = WORLDS[PL.w], sks = w.sk.flat(), s = pickOne(sks), k = SK[s].gen(), young = PL.w <= 1, it = young ? youngItem(buildItem(k)) : buildItem(k);
+  const w = WORLDS[PL.w], sks = w.sk.flat(), s = pickOne(sks), k = SK[s].gen(), young = PL.w === 0, it = young ? youngItem(buildItem(k)) : buildItem(k);
   PL.it = it; PL.s = s; PL.t = 0; PL.busy = false;
   $('#plProg').style.width = (PL.i / PL_N * 100) + '%';
   $('#plCount').textContent = `Vraag ${PL.i + 1} van ${PL_N}`;
   const qq = qShow(it, young); $('#plQ').textContent = qq; $('#plQ').style.display = qq ? '' : 'none'; $('#plQ').classList.toggle('long', qq.length > 22);
   const vc = $('#plVis'); if (it.vis) { vc.style.display = ''; drawVisInto(vc, it.vis); } else vc.style.display = 'none';
-  $('#plOpts').innerHTML = makeOptions(it).map(o => `<button class="btn plopt" data-pl="${esc(o)}">${young && it.dotGates && +o <= 10 ? `<span class="pldots">${'●'.repeat(+o)}</span>` : esc(o)}</button>`).join('');
+  $('#plOpts').innerHTML = makeOptions(it).map(o => `<button class="btn plopt" data-pl="${esc(o)}">${young && it.dotGates && +o <= 10 ? `<span class="pldots">${dotsHTML(+o)}</span>` : esc(o)}</button>`).join('');
 }
 function drawVisInto(cn, v) { const d = Math.min(2, devicePixelRatio || 1), r = cn.getBoundingClientRect(); cn.width = Math.max(10, r.width * d); cn.height = Math.max(10, r.height * d); const c = cn.getContext('2d'); c.clearRect(0, 0, cn.width, cn.height); drawVis(c, v, cn.width, cn.height); }
 function placeAnswer(val) {
@@ -2970,7 +3187,7 @@ function placeAnswer(val) {
   ok ? r.c++ : r.f++; PL.log.push([PL.w, ok]);
   ok ? SFX.good() : SFX.bad();
   $$('#plOpts button').forEach(b => { if (b.dataset.pl === PL.it.ans) b.classList.add('right'); else if (b.dataset.pl === val) b.classList.add('wrong'); });
-  const st = PL_STEPS[PL.i] || 1; PL.w = clamp(PL.w + (ok ? st : -st), 0, WORLDS.length - 1);
+  const st = PL_STEPS[PL.i] || 1; PL.w = clamp(PL.w + (ok ? st : -st), 0, NW - 1);
   PL.i++;
   setTimeout(() => PL && (PL.i >= PL_N ? placeFinish() : placeQ()), ok ? 450 / SNEL : 900 / SNEL);
 }
@@ -3049,6 +3266,12 @@ const on = (id, f) => { $(id).onclick = f; };
 on('#btnPlay', () => { SFX.click(); playLevel(nextLevel()); });
 on('#btnMap', () => { SFX.click(); mapSeason = LEVELS[nextLevel()].s; show('scrMap'); });
 on('#btnDag', () => { SFX.click(); show('scrDag'); });
+on('#btnKleuter', () => { SFX.click(); show('scrKleuter'); });
+on('#btnCustom', () => { SFX.click(); show('scrCustom'); });
+on('#btnPlKleuter', () => { SFX.click(); P.kleuter = true; if (!P.placed) P.placed = { world: 0, date: dayKey(), kleuter: 1 }; P.story.intro = P.story.intro || 0; save(); show('scrKleuter'); });
+on('#btnCuGo', () => { SFX.click(); save(); startRide('custom'); });
+$('#klBox').addEventListener('click', e => { const b = e.target.closest('[data-kl]'); if (!b) return; const id = +b.dataset.kl; if (!isOpen(id)) { SFX.bad(); return; } SFX.click(); playLevel(id); });
+$('#scrCustom').addEventListener('click', e => { const b = e.target.closest('[data-cu]'); if (!b) return; cuTap(b.dataset.cu, b.dataset.v); });
 on('#btnGarage', () => { SFX.click(); show('scrGarage'); });
 on('#btnKaart', () => { SFX.click(); show('scrKaart'); });
 on('#btnStickers', () => { SFX.click(); show('scrStickers'); });
@@ -3065,7 +3288,7 @@ on('#btnNext', () => { SFX.click(); goNext(); });
 on('#btnPause', () => { SFX.click(); pauseGame(); });
 on('#btnResume', () => { SFX.click(); resumeGame(); });
 on('#btnCalm', () => { P.calm = !P.calm; save(); syncCalm(); $('#game').classList.toggle('calm', P.calm); if (!P.calm) $('#calmGo').classList.remove('show'); });
-on('#btnQuit', () => { const m = R && R.mode; SFX.click(); R = null; if (m === 'dag') show('scrDag'); else { if (lastRide && lastRide.levelId != null) mapSeason = LEVELS[lastRide.levelId].s; show('scrMap'); } });
+on('#btnQuit', () => { const m = R && R.mode; SFX.click(); R = null; if (m === 'dag') show('scrDag'); else if (m === 'custom') show('scrCustom'); else if (lastRide && lastRide.levelId >= NLEV) show('scrKleuter'); else { if (lastRide && lastRide.levelId != null) mapSeason = LEVELS[lastRide.levelId].s; show('scrMap'); } });
 on('#btnVoucher', () => { useVoucher(); });
 on('#btnWords', e => { e.stopPropagation(); toggleWords(); });
 on('#lvWords', () => toggleWords());
@@ -3162,7 +3385,7 @@ window.__rr = {
   SK, CAT, WORLDS, LEVELS, SEASONS, VEHICLES, STICKERS, STORY, MAKES, ASSET_FILES, player,
   parseKey, buildItem, makeOptions, pickKey, recordResult, startRide, playLevel, finishLevel, useVoucher, move, turbo, show, openLevel, openOuders,
   placeStart, placeAnswer, placeResult, applyPlacement, estimate, isOpen, nextLevel, setProfile, addProfile, migrateV1, loadG, endRest, storyEnd, storyNext,
-  reload() { G = loadG(); P = G.cur ? G.profiles[G.cur] : null; }, get curScreen() { return curScreen; }, qShow, youngItem, tapGate, commit, WORD_SKILLS, toggleWords, toggleStory, playStory, runRest, playLevelArt: playLevel,
+  reload() { G = loadG(); P = G.cur ? G.profiles[G.cur] : null; }, get curScreen() { return curScreen; }, qShow, youngItem, tapGate, commit, WORD_SKILLS, toggleWords, toggleStory, playStory, runRest, playLevelArt: playLevel, cuGen, customMix, migrate25, nextKleuter, isKl, finishCustom, NW, KLEV0,
 };
 
 </script>

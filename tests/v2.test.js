@@ -52,14 +52,14 @@ const LAYOUTS = [[360, 640], [375, 667], [390, 844], [1280, 800]];
         if (it.ans < 0 || /^−|^-/.test(it.ans)) range.push(`${s}: negatief ${q}`);
       }
       // 144 levels, mix verwijst naar bestaande vaardigheden, boss op elke 9e
-      const lv = __rr.LEVELS; const lvOk = lv.length === 144 && lv.every((l, i) => l.mix.every(m => __rr.SK[m[0]]) && l.boss === (i % 9 === 8));
+      const lv = __rr.LEVELS; const lvOk = lv.length === 162 && __rr.LEVELS.filter(l => !__rr.isKl(l)).length === 144 && lv.every((l, i) => l.mix.every(m => __rr.SK[m[0]]) && l.boss === (i % 9 === 8));
       return { bad: bad.slice(0, 15), nbad: bad.length, range: range.slice(0, 10), nrange: range.length, checked: Object.values(n).reduce((a, c) => a + c, 0), skills: Object.keys(n).length, lvOk };
     });
     console.log(`  ${r.checked} antwoorden onafhankelijk nagerekend over ${r.skills} vaardigheden`);
     ok(r.nbad === 0, 'generator fouten: ' + r.bad.join(' | ')); ok(r.nrange === 0, 'bereik: ' + r.range.join(' | ')); ok(r.checked > 8000, 'te weinig nagerekend'); ok(r.lvOk, '144 levels/boss-structuur');
     // moeilijkheid loopt op: gemiddelde T per wereld daalt niet en getallen worden groter
     const ramp = await pg.evaluate(() => __rr.WORLDS.map(w => { let mx = 0; for (let i = 0; i < 200; i++) { const s = w.sk.flat()[i % w.sk.flat().length], it = __rr.buildItem(__rr.SK[s].gen()); const ns = (it.q + ' ' + it.ans).replace(/(\d)\.(\d{3})/g, '$1$2').match(/\d+/g) || [0]; mx = Math.max(mx, ...ns.map(Number)); } return mx; }));
-    ok(ramp[0] <= 10 && ramp[1] <= 10 && ramp[4] <= 100 && ramp[13] >= 1000, 'moeilijkheidsopbouw ' + ramp);
+    ok(ramp[0] <= 20 && ramp[1] <= 20 && ramp[4] <= 100 && ramp[13] >= 1000 && ramp[16] <= 10 && ramp[17] <= 10, 'moeilijkheidsopbouw ' + ramp);
     await pg.context().close(); }
 
   /* 2. nieuw profiel + instaptest */
@@ -288,15 +288,15 @@ const LAYOUTS = [[360, 640], [375, 667], [390, 844], [1280, 800]];
     await pg.click('#restCv'); ok(await pg.evaluate(() => !!__rr.REST), 'adempauze: tik vóór 3 s doet niets');
     await pg.waitForTimeout(2900); await pg.click('#btnRestSkip'); ok(await pg.evaluate(() => !__rr.REST), 'adempauze: na 3 s over te slaan');
     await pg.context().close(); }
-  { const pg = await page([390, 844], URL0 + '?snel=1'); await quickProfile(pg, 'Kleuter');
+  { const pg = await page([390, 844], URL0 + '?snel=1'); await quickProfile(pg, 'Kleuter'); await pg.evaluate(() => { __rr.P.kleuter = true; show('scrMenu'); });
     ok(await pg.evaluate(() => document.body.classList.contains('young') && !!document.querySelector('#btnPlay .yico')), 'groep 1-2: menu met iconen');
     await shot(pg, 'v21_groep1_menu.png');
-    await pg.evaluate(() => { __rr.P.story.intro = 0; __rr.P.showStory = true; playStory('w0', () => show('scrMenu')); }); await pg.waitForTimeout(300);
-    ok(await pg.evaluate(() => __rr.STORYRUN && __rr.STORYRUN.strip ? document.body.classList.contains('young') && STRIP_PICS[2][0].length > 0 && __rr.STORYRUN.n === 3 : document.querySelector('#bubble').classList.contains('pics') && document.querySelector('#bubblePic').textContent.length > 0), 'groep 1-2: verhaal als plaatjes (strip met pictogrammen)');
+    await pg.evaluate(() => { __rr.P.story.intro = 0; __rr.P.showStory = true; playLevel(144); }); await pg.waitForTimeout(300);
+    ok(await pg.evaluate(() => __rr.curScreen === 'game' && !__rr.STORYRUN && __rr.R.young), 'kleuters: geen verhaal, meteen racen (plaatjes)');
     ok(await pg.evaluate(() => __rr.ASSET_FILES.length >= 130 && ['strip_01', 'strip_16', 'rest_r01', 'veh_eenhoorn', 'char_speler_b_0', 'icon_w15', 'ui_gate_goed'].every(n => __rr.ASSET_FILES.includes(n))), 'art: alle onderdelen (deel 1-7) in de precache-lijst');
     ok(await pg.evaluate(() => [...document.querySelectorAll('#hud img.aimg, h1.logo img.emb')].length >= 1), 'art: munt/embleem als afbeelding');
-    await shot(pg, 'v21_groep1_verhaal.png'); await pg.evaluate(() => __rr.storyEnd());
-    await pg.evaluate(() => __rr.startRide('level', 0, 'none'));
+    await pg.evaluate(() => { __rr.R = null; show('scrKleuter'); });
+    await pg.evaluate(() => __rr.startRide('level', 144, 'none'));
     await pg.waitForFunction(() => __rr.R.phase === 'run' && __rr.R.row && __rr.R.row.z < 8.5, null, { timeout: 15000 });
     const y = await pg.evaluate(() => ({ tutor: __rr.R.tutor, dots: __rr.R.row.dots, pic: document.querySelector('#sumCard').classList.contains('pic'), txt: document.querySelector('#sumText').textContent, vis: getComputedStyle(document.querySelector('#sumVis')).display }));
     ok(y.tutor && y.dots && y.pic && y.vis === 'block', 'groep 1: stippen-vraag, stippen-poorten, wijzende hand ' + JSON.stringify(y));

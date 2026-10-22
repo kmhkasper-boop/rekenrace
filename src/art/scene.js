@@ -197,7 +197,7 @@ function drawGateRow(r) {
   ctx.font = `700 ${fs}px ${FONT}`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
   for (let i = 0; i < 3; i++) {
     const X = i - 1, x = CX + (X - camX) * s, txt = String(r.opts[i]), tw = ctx.measureText(txt).width;
-    const pw = Math.min(s * .97, Math.max(.9 * s, tw + 14)), ph = Math.max(r.dots ? .75 * s : .6 * s, fs * 1.3);
+    const pw = Math.min(s * .97, Math.max(.9 * s, tw + 14)), ph = Math.max(r.dots ? .9 * s : .6 * s, fs * 1.3);
     const yb = g - (.52 + bob) * s, yt = yb - ph;
     ctx.fillStyle = 'rgba(0,0,0,.14)'; ell(ctx, x, g, pw * .45, s * .07);
     const beam = r.golden ? 'rgba(255,214,64,.45)' : 'rgba(255,255,255,.4)';

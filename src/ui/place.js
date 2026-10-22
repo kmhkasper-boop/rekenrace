@@ -10,13 +10,13 @@ function placeStart() {
   $('#plIntro').style.display = 'none'; $('#plRun').style.display = ''; placeQ();
 }
 function placeQ() {
-  const w = WORLDS[PL.w], sks = w.sk.flat(), s = pickOne(sks), k = SK[s].gen(), young = PL.w <= 1, it = young ? youngItem(buildItem(k)) : buildItem(k);
+  const w = WORLDS[PL.w], sks = w.sk.flat(), s = pickOne(sks), k = SK[s].gen(), young = PL.w === 0, it = young ? youngItem(buildItem(k)) : buildItem(k);
   PL.it = it; PL.s = s; PL.t = 0; PL.busy = false;
   $('#plProg').style.width = (PL.i / PL_N * 100) + '%';
   $('#plCount').textContent = `Vraag ${PL.i + 1} van ${PL_N}`;
   const qq = qShow(it, young); $('#plQ').textContent = qq; $('#plQ').style.display = qq ? '' : 'none'; $('#plQ').classList.toggle('long', qq.length > 22);
   const vc = $('#plVis'); if (it.vis) { vc.style.display = ''; drawVisInto(vc, it.vis); } else vc.style.display = 'none';
-  $('#plOpts').innerHTML = makeOptions(it).map(o => `<button class="btn plopt" data-pl="${esc(o)}">${young && it.dotGates && +o <= 10 ? `<span class="pldots">${'●'.repeat(+o)}</span>` : esc(o)}</button>`).join('');
+  $('#plOpts').innerHTML = makeOptions(it).map(o => `<button class="btn plopt" data-pl="${esc(o)}">${young && it.dotGates && +o <= 10 ? `<span class="pldots">${dotsHTML(+o)}</span>` : esc(o)}</button>`).join('');
 }
 function drawVisInto(cn, v) { const d = Math.min(2, devicePixelRatio || 1), r = cn.getBoundingClientRect(); cn.width = Math.max(10, r.width * d); cn.height = Math.max(10, r.height * d); const c = cn.getContext('2d'); c.clearRect(0, 0, cn.width, cn.height); drawVis(c, v, cn.width, cn.height); }
 function placeAnswer(val) {
@@ -25,7 +25,7 @@ function placeAnswer(val) {
   ok ? r.c++ : r.f++; PL.log.push([PL.w, ok]);
   ok ? SFX.good() : SFX.bad();
   $$('#plOpts button').forEach(b => { if (b.dataset.pl === PL.it.ans) b.classList.add('right'); else if (b.dataset.pl === val) b.classList.add('wrong'); });
-  const st = PL_STEPS[PL.i] || 1; PL.w = clamp(PL.w + (ok ? st : -st), 0, WORLDS.length - 1);
+  const st = PL_STEPS[PL.i] || 1; PL.w = clamp(PL.w + (ok ? st : -st), 0, NW - 1);
   PL.i++;
   setTimeout(() => PL && (PL.i >= PL_N ? placeFinish() : placeQ()), ok ? 450 / SNEL : 900 / SNEL);
 }

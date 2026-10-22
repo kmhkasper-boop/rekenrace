@@ -42,3 +42,10 @@ Graaf Chaos heeft de vier seizoenskristallen gestolen. Samen met Opa Tandwiel en
 - Verhaal: 16 strips (STRIP_FOR in data/story.js), paneel voor paneel, tekst in de ballon, met naam van de speler; groep 1-2 ziet pictogrammen in de ballon. Lege vlakken (strip 01/04/13) worden weggeknipt. Verhalen zonder strip gebruiken de oude scène.
 - Rustmomenten: 8 animaties (4 frames, 6 fps).
 - UI: poortbogen (normaal/goed/fout), munt, ster, bon, kristallen, embleem, wereldiconen, garage-achtergrond. De knop-sprites worden niet gebruikt (CSS-knoppen blijven).
+
+## v2.5: Kleuters apart, Zelf kiezen, tel-rijtjes
+- **Hoofdroute begint bij groep 3.** Lente: Splits-sloot (splitsen tot 10, +/− tot 10, dubbel, buurgetallen tot 20) → Bruggetje (plus/min tot 20, over de 10) → Tulpentuin (hele/halve uren, geld tot € 10, tientallen) → Klokkentoren (halve uren, +/− tot 100 zonder overschrijden, tientallen erbij/eraf; Kikkerkoning). Zomer t/m Winter ongewijzigd.
+- **Kleuters** (🧸, menu en instaptest): de oude Tel-tuin en Splits-sloot (groep 1-2), levels 144-161, met alleen plaatjes, de hand-uitleg en eigen sterren. Geen verhaal, telt niet mee voor de hoofdroute.
+- **Migratie (v2.4 → v2.5, `migrate25`)**: oud w0/w1 → kleuter-levels; oud Bruggetje (w2) → nieuw w1; Klokkentoren en verder blijven gelijk. Splits-sloot en Tulpentuin worden 'gehaald via instap' (0 sterren) als je al verder was. Sterren, munten en feiten blijven bewaard.
+- **Zelf kiezen** (🎛️): soort som, getallen tot (10 … 10.000), moeilijk (🙂 😎 🔥), en onder 'meer' extra's en tafels. 🎲 = maakt niet uit. 15 sommen op het baan van het huidige seizoen, 40% munten, geen verhaal of voortgang. De laatste keuze wordt per profiel bewaard.
+- **Tel-plaatjes**: stippen en appels in rijtjes van 3 (een rij van 4 als er anders 1 overblijft), boven 10 in tienvakken.
